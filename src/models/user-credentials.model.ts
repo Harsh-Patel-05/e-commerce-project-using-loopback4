@@ -1,6 +1,6 @@
 import {Entity, Model, belongsTo, model, property} from '@loopback/repository';
-import {DateTime} from 'luxon';
 import {User} from './user.model';
+import {DateTime} from 'luxon';
 
 @model({forceId: false})
 export class Security extends Model {
@@ -89,7 +89,6 @@ export class UserCredentials extends Entity {
     default: () => DateTime.utc().toJSDate(),
   })
   updatedAt?: DateTime;
-
 
   constructor(data?: Partial<UserCredentials>) {
     super(data);

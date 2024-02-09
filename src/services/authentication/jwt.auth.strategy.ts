@@ -55,11 +55,11 @@ export class JWTAuthenticationStrategy implements AuthenticationStrategy {
       );
     }
 
-    const orgId = <string>request.headers['org'];
+    // const orgId = <string>request.headers['org'];
 
-    if (!orgId) {
-      throw new HttpErrors.Unauthorized(`Organization ID is missing`);
-    }
+    // if (!orgId) {
+    //   throw new HttpErrors.Unauthorized(`Organization ID is missing`);
+    // }
 
     try {
       const token = parts[1];

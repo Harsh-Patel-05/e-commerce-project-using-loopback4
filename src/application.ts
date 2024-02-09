@@ -1,5 +1,5 @@
 import {BootMixin} from '@loopback/boot';
-import {ApplicationConfig} from '@loopback/core';
+import {ApplicationConfig, createBindingFromClass} from '@loopback/core';
 import {
   RestExplorerBindings,
   RestExplorerComponent,
@@ -9,6 +9,11 @@ import {RestApplication} from '@loopback/rest';
 import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MySequence} from './sequence';
+import {AuthenticationBindings, AuthenticationComponent, registerAuthenticationStrategy} from '@loopback/authentication';
+import {TokenServiceBindings, TokenServiceConstants} from './keys';
+import {JWTService} from './services/authentication/jwt.service';
+import {JWTAuthenticationStrategy} from './services/authentication/jwt.auth.strategy';
+import {SecuritySpecEnhancer} from './services/authentication/security.spec.enhancer';
 
 export {ApplicationConfig};
 
@@ -40,5 +45,25 @@ export class ECommerceApplication extends BootMixin(
         nested: true,
       },
     };
+
+    this.configure(AuthenticationBindings.COMPONENT).to({
+      defaultMetadata: {strategy: 'jwt'},
+    });
+
+    // Mount authentication system
+    this.component(AuthenticationComponent);
+
+    // Mount jwt component
+    this.add(createBindingFromClass(SecuritySpecEnhancer));
+
+    this.bind(TokenServiceBindings.TOKEN_SECRET).to(
+      TokenServiceConstants.TOKEN_SECRET_VALUE,
+    );
+    this.bind(TokenServiceBindings.TOKEN_EXPIRES_IN).to(
+      TokenServiceConstants.TOKEN_EXPIRES_IN_VALUE,
+    );
+    this.bind(TokenServiceBindings.TOKEN_SERVICE).toClass(JWTService);
+
+    registerAuthenticationStrategy(this, JWTAuthenticationStrategy);
   }
 }

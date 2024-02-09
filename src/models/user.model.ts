@@ -39,12 +39,6 @@ export class User extends Entity {
   email: string;
 
   @property({
-    type: 'string',
-    required: true,
-  })
-  password: string;
-
-  @property({
     type: 'date',
     default: null,
     jsonSchema: {
@@ -73,7 +67,6 @@ export class User extends Entity {
 
   @hasOne(() => UserCredentials)
   userCredentials: UserCredentials;
-
 
   constructor(data?: Partial<User>) {
     super(data);
