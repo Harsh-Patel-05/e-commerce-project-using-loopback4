@@ -1,7 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
-import {Admin} from './admin.model';
 import {DateTime} from 'luxon';
 import {Loopback4BoilerplatePublicConstants} from '../keys';
+import {User} from './user.model';
 
 @model({
   settings: {
@@ -18,10 +18,10 @@ export class Session extends Entity {
   id: string;
 
   @belongsTo(
-    () => Admin,
+    () => User,
     {
       //relation metadata
-      name: 'admin',
+      name: 'user',
     },
     {
       // property definition
@@ -30,7 +30,7 @@ export class Session extends Entity {
       mongodb: {dataType: 'ObjectId'},
     },
   )
-  adminId: string;
+  userId: string;
 
   @property({
     type: 'string',

@@ -1,6 +1,6 @@
 import {Entity, Model, belongsTo, model, property} from '@loopback/repository';
 import {DateTime} from 'luxon';
-import {Admin} from './admin.model';
+import {User} from './user.model';
 
 @model({forceId: false})
 export class Security extends Model {
@@ -38,7 +38,7 @@ export class Security extends Model {
     strictObjectIDCoercion: true,
   },
 })
-export class AdminCredentials extends Entity {
+export class UserCredentials extends Entity {
   @property({
     type: 'string',
     id: true,
@@ -48,10 +48,10 @@ export class AdminCredentials extends Entity {
   id: string;
 
   @belongsTo(
-    () => Admin,
+    () => User,
     {
       //relation metadata
-      name: 'admin',
+      name: 'user',
     },
     {
       // property definition
@@ -60,7 +60,7 @@ export class AdminCredentials extends Entity {
       mongodb: {dataType: 'ObjectId'},
     },
   )
-  adminId: string;
+  userId: string;
 
   @property({
     type: 'string',
@@ -91,13 +91,13 @@ export class AdminCredentials extends Entity {
   updatedAt?: DateTime;
 
 
-  constructor(data?: Partial<AdminCredentials>) {
+  constructor(data?: Partial<UserCredentials>) {
     super(data);
   }
 }
 
-export interface AdminCredentialsRelations {
+export interface UserCredentialsRelations {
   // describe navigational properties here
 }
 
-export type AdminCredentialsWithRelations = AdminCredentials & AdminCredentialsRelations;
+export type UserCredentialsWithRelations = UserCredentials & UserCredentialsRelations;

@@ -1,13 +1,13 @@
 import {Entity, hasOne, model, property} from '@loopback/repository';
 import {DateTime} from 'luxon';
-import {AdminCredentials} from './admin-credentials.model';
+import {UserCredentials} from './user-credentials.model';
 
 @model({
   settings: {
     strictObjectIDCoercion: true,
   },
 })
-export class Admin extends Entity {
+export class User extends Entity {
   @property({
     type: 'string',
     id: true,
@@ -71,17 +71,17 @@ export class Admin extends Entity {
   })
   updatedAt?: DateTime;
 
-  @hasOne(() => AdminCredentials)
-  adminCredentials: AdminCredentials;
+  @hasOne(() => UserCredentials)
+  userCredentials: UserCredentials;
 
 
-  constructor(data?: Partial<Admin>) {
+  constructor(data?: Partial<User>) {
     super(data);
   }
 }
 
-export interface AdminRelations {
+export interface UserRelations {
   // describe navigational properties here
 }
 
-export type AdminWithRelations = Admin & AdminRelations;
+export type UserWithRelations = User & UserRelations;
