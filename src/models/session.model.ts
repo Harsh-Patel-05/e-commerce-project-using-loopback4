@@ -1,7 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
-import {User} from './user.model';
 import {DateTime} from 'luxon';
 import {Loopback4BoilerplatePublicConstants} from '../keys';
+import {User} from './user.model';
 
 @model({
   settings: {
