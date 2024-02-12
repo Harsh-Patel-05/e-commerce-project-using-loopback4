@@ -7,6 +7,7 @@ import {genSalt, hash} from 'bcryptjs';
 import {DateTime} from 'luxon';
 import {Session, User} from '../models';
 import {
+  AdminRepository,
   // ForgotpasswordRepository,
   SessionRepository,
   UserCredentialsRepository,
@@ -26,8 +27,8 @@ export class AuthController {
     @service(UserService)
     public userService: UserService,
     @inject(RestBindings.Http.REQUEST) private request: Request,
-    // @repository(ForgotpasswordRepository)
-    // public forgotpasswordRepository: ForgotpasswordRepository,
+    @repository(AdminRepository)
+    public adminRepository: AdminRepository,
   ) { }
 
   //Sign up API Endpoint
@@ -43,7 +44,7 @@ export class AuthController {
       content: {
         'application/json': {
           schema: {
-            required: ['name', 'email', 'password'],
+            required: ['name', 'email', 'password','role'],
             properties: {
               name: {
                 type: 'string',
@@ -62,6 +63,9 @@ export class AuthController {
                   pattern: `Invalid input.`,
                 },
               },
+              role: {
+                type: 'string',
+              },
             },
           },
         },
@@ -71,6 +75,7 @@ export class AuthController {
       name: string,
       email: string;
       password: string;
+      role?: string;
     },
   ) {
     const {name, email, password} = payload;
