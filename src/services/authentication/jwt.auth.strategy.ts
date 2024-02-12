@@ -4,8 +4,9 @@ import {repository} from '@loopback/repository';
 import {HttpErrors, Request, RestBindings} from '@loopback/rest';
 import {UserProfile, securityId} from '@loopback/security';
 import {TokenServiceBindings} from '../../keys';
-import {Session, User} from '../../models';
-import {SessionRepository, UserRepository} from '../../repositories';
+import {AdminRepository, SessionRepository, UserRepository} from '../../repositories';
+import {User} from '../../models';
+import {Session} from '../../models/session.model';
 
 export type AuthCredentials = {
   user?: User;
@@ -22,8 +23,8 @@ export class JWTAuthenticationStrategy implements AuthenticationStrategy {
     public sessionRepository: SessionRepository,
     @repository(UserRepository)
     public userRepository: UserRepository,
-    // @repository(OrganizationRepository)
-    // public organizationRepository: OrganizationRepository,
+    @repository(AdminRepository)
+    public adminRepository: AdminRepository,
   ) { }
 
   async authenticate(
@@ -55,12 +56,6 @@ export class JWTAuthenticationStrategy implements AuthenticationStrategy {
       );
     }
 
-    // const orgId = <string>request.headers['org'];
-
-    // if (!orgId) {
-    //   throw new HttpErrors.Unauthorized(`Organization ID is missing`);
-    // }
-
     try {
       const token = parts[1];
 
@@ -76,12 +71,9 @@ export class JWTAuthenticationStrategy implements AuthenticationStrategy {
       if (session) {
         user = await this.userRepository.findById(userProfile[securityId]);
 
-        // const org = await this.organizationRepository.findById(orgId);
-
         return {
           user,
           session,
-          // org,
         }
       }
 

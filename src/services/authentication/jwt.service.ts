@@ -46,7 +46,7 @@ export class JWTService implements TokenService {
     return userProfile;
   }
 
-  async generateToken(userProfile: UserProfile): Promise<string> {
+  async generateToken(userProfile: any): Promise<string> {
     if (!userProfile) {
       throw new HttpErrors.Unauthorized(
         'Error generating token : userProfile is null',

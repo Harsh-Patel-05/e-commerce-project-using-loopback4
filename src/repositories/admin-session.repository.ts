@@ -1,37 +1,30 @@
 import {Getter, inject} from '@loopback/core';
-import {
-  BelongsToAccessor,
-  DefaultCrudRepository,
-  Filter,
-  Options,
-  repository,
-} from '@loopback/repository';
+import {BelongsToAccessor, DefaultCrudRepository, Filter, Options, repository} from '@loopback/repository';
+import {MongoDbDataSource} from '../datasources';
+import {Admin, AdminSession, AdminSessionRelations} from '../models';
+import {AdminRepository} from './admin.repository';
 import {HttpErrors} from '@loopback/rest';
 import {DateTime} from 'luxon';
-import {MongoDbDataSource} from '../datasources';
-import {User} from '../models';
-import {Session, SessionRelations} from '../models/session.model';
-import {UserRepository} from './user.repository';
 
-export class SessionRepository extends DefaultCrudRepository<
-  Session,
-  typeof Session.prototype.id,
-  SessionRelations
+export class AdminSessionRepository extends DefaultCrudRepository<
+  AdminSession,
+  typeof AdminSession.prototype.id,
+  AdminSessionRelations
 > {
-  public readonly user: BelongsToAccessor<User, typeof User.prototype.id>;
+  public readonly admin: BelongsToAccessor<Admin, typeof Admin.prototype.id>;
   constructor(
     @inject('datasources.mongo_db') dataSource: MongoDbDataSource,
-    @repository.getter('UserRepository')
-    protected userRepositoryGetter: Getter<UserRepository>,
+    @repository.getter('AdminRepository')
+    protected adminRepositoryGetter: Getter<AdminRepository>,
   ) {
-    super(Session, dataSource);
+    super(AdminSession, dataSource);
 
     //for user
-    this.user = this.createBelongsToAccessorFor('user', userRepositoryGetter);
-    this.registerInclusionResolver('user', this.user.inclusionResolver);
+    this.admin = this.createBelongsToAccessorFor('admin', adminRepositoryGetter);
+    this.registerInclusionResolver('admin', this.admin.inclusionResolver);
   }
 
-  async findOne(filter?: Filter<Session>, options?: Options): Promise<Session> {
+  async findOne(filter?: Filter<AdminSession>, options?: Options): Promise<AdminSession> {
     const result = await super.findOne(filter, options);
 
     if (result) {
@@ -41,7 +34,7 @@ export class SessionRepository extends DefaultCrudRepository<
     }
   }
 
-  async findSessionByToken(token: string): Promise<Session | boolean> {
+  async findSessionByToken(token: string): Promise<AdminSession | boolean> {
     const session = await this.findOne({
       where: {
         or: [
@@ -72,7 +65,7 @@ export class SessionRepository extends DefaultCrudRepository<
     return session;
   }
 
-  definePersistedModel(entityClass: typeof Session) {
+  definePersistedModel(entityClass: typeof AdminSession) {
     const modelClass = super.definePersistedModel(entityClass);
     modelClass.observe('before save', async ctx => {
       if (!ctx.isNewInstance && ctx.data) {

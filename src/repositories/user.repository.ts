@@ -8,8 +8,9 @@ import {
 } from '@loopback/repository';
 import {HttpErrors} from '@loopback/rest';
 import {MongoDbDataSource} from '../datasources';
-import {User, UserCredentials, UserRelations} from '../models';
 import {UserCredentialsRepository} from './user-credentials.repository';
+import {User, UserRelations} from '../models';
+import {UserCredentials} from '../models/user-credentials.model';
 
 export class UserRepository extends DefaultCrudRepository<
   User,

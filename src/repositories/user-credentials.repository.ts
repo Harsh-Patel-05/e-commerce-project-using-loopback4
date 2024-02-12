@@ -2,7 +2,7 @@ import {inject} from '@loopback/core';
 import {DefaultCrudRepository, Filter, Options} from '@loopback/repository';
 import {HttpErrors} from '@loopback/rest';
 import {MongoDbDataSource} from '../datasources';
-import {UserCredentials, UserCredentialsRelations} from '../models';
+import {UserCredentials, UserCredentialsRelations} from '../models/user-credentials.model';
 
 export class UserCredentialsRepository extends DefaultCrudRepository<
   UserCredentials,

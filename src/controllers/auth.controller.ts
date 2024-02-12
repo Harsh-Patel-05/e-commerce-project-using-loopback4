@@ -1,20 +1,19 @@
-import {authenticate} from '@loopback/authentication';
 import {inject, service} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {HttpErrors, Request, RestBindings, get, param, post, requestBody} from '@loopback/rest';
-import {SecurityBindings} from '@loopback/security';
+import {HttpErrors, Request, RestBindings, post, requestBody} from '@loopback/rest';
 import {genSalt, hash} from 'bcryptjs';
-import {DateTime} from 'luxon';
-import {Session, User} from '../models';
+import {UserKeys} from '../keys/user.keys';
 import {
+  AdminCredentialsRepository,
   AdminRepository,
+  CustomerCredentialsRepository,
+  CustomerRepository,
   // ForgotpasswordRepository,
   SessionRepository,
   UserCredentialsRepository,
-  UserRepository,
+  UserRepository
 } from '../repositories';
 import {UserService} from '../services';
-import {AuthCredentials} from '../services/authentication/jwt.auth.strategy';
 
 export class AuthController {
   constructor(
@@ -29,6 +28,12 @@ export class AuthController {
     @inject(RestBindings.Http.REQUEST) private request: Request,
     @repository(AdminRepository)
     public adminRepository: AdminRepository,
+    @repository(AdminCredentialsRepository)
+    public adminCredentialsRepository: AdminCredentialsRepository,
+    @repository(CustomerRepository)
+    public customerRepository: CustomerRepository,
+    @repository(CustomerCredentialsRepository)
+    public customerCredentialsRepository: CustomerCredentialsRepository,
   ) { }
 
   //Sign up API Endpoint
@@ -44,7 +49,7 @@ export class AuthController {
       content: {
         'application/json': {
           schema: {
-            required: ['name', 'email', 'password','role'],
+            required: ['name', 'email', 'password', 'role'],
             properties: {
               name: {
                 type: 'string',
@@ -75,21 +80,96 @@ export class AuthController {
       name: string,
       email: string;
       password: string;
-      role?: string;
+      role: string;
     },
   ) {
-    const {name, email, password} = payload;
-    const user = await this.userRepository.create({
-      name,
-      email,
-      password,
-    });
+    const {name, email, password, role} = payload;
     const hashedPassword = await hash(password, await genSalt());
-    await this.userCredentialsRepository.create({
-      userId: user.id,
-      password: hashedPassword,
-    });
-    return user;
+
+    if (role === 'admin') {
+      const customer = await this.customerRepository.findOne({
+        where: {email, isDeleted: false},
+      });
+      if (customer) {
+        return {
+          statusCode: 200,
+          message: UserKeys.USER_ALREADY_EXIST,
+        }
+      }
+      const admin = await this.adminRepository.findOne({
+        where: {email, isDeleted: false},
+      });
+      if (admin) {
+        return {
+          statusCode: 200,
+          message: UserKeys.USER_ALREADY_EXIST,
+        }
+      }
+      const newAdmin = await this.adminRepository.create({
+        name,
+        email,
+        password
+      });
+      const cred = await this.adminCredentialsRepository.create({
+        password: hashedPassword,
+        adminId: newAdmin.id
+      });
+      return {
+        statusCode: 200,
+        message: UserKeys.USER_CREATED,
+        data: newAdmin,
+        adminCred: cred,
+      };
+    }
+
+    if (role === 'customer') {
+      const admin = await this.adminRepository.findOne({
+        where: {email, isDeleted: false},
+      });
+      if (admin) {
+        return {
+          statusCode: 404,
+          message: UserKeys.USER_ALREADY_EXIST
+        }
+      }
+
+      const customer = await this.customerRepository.findOne({
+        where: {email, isDeleted: false},
+      });
+      if (customer) {
+        return {
+          statusCode: 404,
+          message: UserKeys.USER_ALREADY_EXIST
+        }
+      }
+      const newCustomer = await this.customerRepository.create({
+        name,
+        email,
+        password
+      });
+      const cred = await this.customerCredentialsRepository.create({
+        password: hashedPassword,
+        customerId: newCustomer.id
+      });
+
+      return {
+        statusCode: 200,
+        message: UserKeys.USER_CREATED,
+        data: newCustomer,
+        customerCred: cred,
+      };
+    }
+    // const user = await this.userRepository.create({
+    //   name,
+    //   email,
+    //   password,
+    // });
+    // const hashedPassword = await hash(password, await genSalt());
+    // await this.userCredentialsRepository.create({
+    //   userId: user.id,
+    //   password: hashedPassword,
+    // });
+    // return user;
   }
 
   //Login API Endpoint
@@ -153,10 +233,7 @@ export class AuthController {
     },
   ) {
     const user = await this.userService.verifyCredentials(payload);
-    const otpReference = await this.userService.sendOtp(user.email, user.id);
-    return {
-      otpReference,
-    };
+    return user;
   }
 
   //Verify OTP API Endpoint
