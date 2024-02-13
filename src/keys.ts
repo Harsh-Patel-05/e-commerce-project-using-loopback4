@@ -1,5 +1,8 @@
 import {TokenService} from '@loopback/authentication';
 import {BindingKey} from '@loopback/core';
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 
 export namespace TokenServiceConstants {
   export const TOKEN_SECRET_VALUE = 'myjwts3cr3t';
@@ -29,3 +32,10 @@ export namespace Loopback4BoilerplatePublicConstants {
     EXPIRED = 'expired',
   }
 }
+
+export namespace EcommerceApplicationConstants {
+  export const SENDGRID_CONSTANTS = {
+    API_KEY: process.env.SENDGRID_API_KEY,
+    FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL
+  };
+};

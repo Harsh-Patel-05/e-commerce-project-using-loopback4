@@ -7,3 +7,4 @@ export * from './customer.model';
 // export * from './customer-credentials.model';
 export * from './admin-session.model';
 export * from './customer-session.model';
+export * from './address.model';
