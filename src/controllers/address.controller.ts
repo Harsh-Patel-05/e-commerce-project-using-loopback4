@@ -163,7 +163,7 @@ export class AddressController {
   async updateById(
     @param.path.string('id') id: string,
     @requestBody({
-      description: 'Create address API Endpoint',
+      description: 'Update address API Endpoint',
       content: {
         'application/json': {
           schema: {

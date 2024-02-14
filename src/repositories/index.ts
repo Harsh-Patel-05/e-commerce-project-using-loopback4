@@ -8,3 +8,4 @@ export * from './customer-credentials.repository';
 export * from './admin-session.repository';
 export * from './customer-session.repository';
 export * from './address.repository';
+export * from './product.repository';
