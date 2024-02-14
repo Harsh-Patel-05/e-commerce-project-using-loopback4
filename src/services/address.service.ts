@@ -1,27 +1,50 @@
 import {BindingScope, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {Address} from '../models';
-import {AddressRepository} from '../repositories';
+import {AddressRepository, CustomerRepository} from '../repositories';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class AddressService {
-  constructor(@repository(AddressRepository)
-  public addressRepository: AddressRepository) { }
+  constructor(
+    @repository(AddressRepository)
+    public addressRepository: AddressRepository,
+    @repository(CustomerRepository)
+    public customerRepository: CustomerRepository) { }
 
   //create address repository
   async createAddress(
+    customerId: string,
     street: string,
     city: string,
     state: string,
     phone: number,
-    pincode: number): Promise<Address> {
-    return this.addressRepository.create({
-      street: street,
-      city: city,
-      state: state,
-      phone: phone,
-      pincode: pincode
+    pincode: number) {
+    const customer = await this.customerRepository.findOne({
+      where: {
+        id: customerId,
+        isDeleted: false,
+      },
     });
+    if (customer) {
+      const data = await this.addressRepository.create({
+        customerId: customerId,
+        street: street,
+        city: city,
+        state: state,
+        phone: phone,
+        pincode: pincode
+      });
+      return {
+        statusCode: 200,
+        message: 'created successfully',
+        data,
+      };
+    } else {
+      return {
+        statusCode: 400,
+        message: 'Cannot find customer',
+      };
+    }
   }
 
   //count address repository
@@ -34,7 +57,7 @@ export class AddressService {
   }
 
   //find address repository
-  async findAll(): Promise<Address[]> {
+  async findAddress(): Promise<Address[]> {
     return this.addressRepository.find({
       where: {
         isDeleted: false
@@ -56,6 +79,7 @@ export class AddressService {
   async updateAddressById(
     id: string,
     payload: {
+      customerId: string,
       street: string,
       city: string,
       state: string,
@@ -77,13 +101,7 @@ export class AddressService {
       };
     }
 
-    const result = await this.addressRepository.updateById(id, {
-      street: payload.street,
-      city: payload.city,
-      state: payload.state,
-      phone: payload.phone,
-      pincode: payload.pincode
-    });
+    const result = await this.addressRepository.updateById(id, payload);
 
     return {
       statusCode: 200,

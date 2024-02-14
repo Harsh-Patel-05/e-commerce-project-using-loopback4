@@ -27,6 +27,7 @@ export class AddressController {
     summary: 'Create address API Endpoint',
     responses: {
       '200': {},
+      '400': {description: 'Cannot find customer'},
     },
   })
   async create(
@@ -35,8 +36,11 @@ export class AddressController {
       content: {
         'application/json': {
           schema: {
-            required: ['street', 'city', 'state', 'phone', 'pincode'],
+            required: ['customerId', 'street', 'city', 'state', 'phone', 'pincode'],
             properties: {
+              customerId: {
+                type: 'string',
+              },
               street: {
                 type: 'string',
               },
@@ -50,7 +54,7 @@ export class AddressController {
                 type: 'number',
               },
               pincode: {
-                type: 'string',
+                type: 'number',
               }
             }
           }
@@ -58,25 +62,28 @@ export class AddressController {
       },
     })
     payload: {
+      customerId: 'string',
       street: 'string',
       city: 'string',
       state: 'string',
       phone: number,
       pincode: number
     }) {
-    const data = await this.addressService.createAddress(
+    const result = await this.addressService.createAddress(
+      payload.customerId,
       payload.street,
       payload.city,
       payload.state,
       payload.phone,
       payload.pincode
     );
-
-    return {
-      statusCode: 200,
-      message: 'created successfully',
-      data,
-    };
+    if (result.statusCode === 400) {
+      throw {
+        statusCode: 400,
+        message: 'Cannot find customer ',
+      };
+    }
+    return result;
   }
 
   // @authenticate('jwt')
@@ -84,7 +91,7 @@ export class AddressController {
     summary: 'Count addresses API Endpoint',
     responses: {
       '200': {},
-      '404': {description: 'No addresses found'},
+      '404': {description: 'Data not found'},
     },
   })
   async count() {
@@ -93,7 +100,7 @@ export class AddressController {
     if (data === 0) {
       return {
         statusCode: 404,
-        message: 'No address found'
+        message: 'Data not found'
       }
     }
 
@@ -109,15 +116,15 @@ export class AddressController {
     summary: 'List of address API Endpoint',
     responses: {
       '200': {},
-      '404': {description: 'No address found'},
+      '404': {description: 'Data not found'},
     },
   })
   async find() {
-    const data = await this.addressService.findAll();
+    const data = await this.addressService.findAddress();
     if (!data || data.length === 0) {
       throw {
         statusCode: 404,
-        message: 'No address found',
+        message: 'Data not found',
       };
     }
     return {
@@ -132,7 +139,7 @@ export class AddressController {
     summary: 'Get address by ID API Endpoint',
     responses: {
       '200': {},
-      '404': {description: 'Address not found'},
+      '404': {description: 'Data not found'},
     },
   })
   async findById(
@@ -142,7 +149,7 @@ export class AddressController {
     if (!data) {
       throw {
         statusCode: 404,
-        message: 'Address not found',
+        message: 'Data not found',
       };
     }
     return {
@@ -157,7 +164,7 @@ export class AddressController {
     summary: 'Update address API Endpoint',
     responses: {
       '200': {},
-      '404': {description: 'Address not found'},
+      '404': {description: 'Data not found'},
     },
   })
   async updateById(
@@ -168,6 +175,9 @@ export class AddressController {
         'application/json': {
           schema: {
             properties: {
+              customerId: {
+                type: 'string',
+              },
               street: {
                 type: 'string',
               },
@@ -189,6 +199,7 @@ export class AddressController {
       },
     })
     payload: {
+      customerId: 'string',
       street: 'string',
       city: 'string',
       state: 'string',
@@ -199,7 +210,7 @@ export class AddressController {
     if (result.statusCode === 404) {
       throw {
         statusCode: 404,
-        message: 'Address not found',
+        message: 'Data not found',
       };
     }
     return result;
@@ -210,7 +221,7 @@ export class AddressController {
     summary: 'Delete address API Endpoint',
     responses: {
       '200': {},
-      '404': {description: 'Address not found or data already deleted'},
+      '404': {description: 'Data not found or data already deleted'},
     },
   })
   async deleteById(@param.path.string('id') id: string) {
@@ -218,7 +229,7 @@ export class AddressController {
     if (result.statusCode === 404) {
       throw {
         statusCode: 404,
-        message: 'Address not found or data already deleted',
+        message: 'Data not found or data already deleted',
       };
     }
     return result;

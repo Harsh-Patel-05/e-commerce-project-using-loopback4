@@ -7,38 +7,44 @@ import {
   post,
   requestBody
 } from '@loopback/rest';
-import {ProductService} from '../services';
+import {ProductVariantService} from '../services';
 
-export class ProductController {
+export class ProductVariantController {
   constructor(
-    @service(ProductService)
-    public productService: ProductService,
+    @service(ProductVariantService)
+    public productVariantService: ProductVariantService,
   ) { }
 
   // @authenticate('jwt')
-  @post('/products', {
-    summary: 'Create product API Endpoint',
+  @post('/product-variants', {
+    summary: 'Create product-variants API Endpoint',
     responses: {
       '200': {},
-      '400': {description: 'Cannot find category'},
+      '400': {description: 'Cannot find product'},
     },
   })
   async create(
     @requestBody({
-      description: 'Create product API Endpoint',
+      description: 'Create product-variants API Endpoint',
       content: {
         'application/json': {
           schema: {
-            required: ['categoryId', 'name', 'description'],
+            required: ['productId', 'size', 'color', 'stock', 'price'],
             properties: {
-              categoryId: {
+              productId: {
                 type: 'string',
               },
-              name: {
+              size: {
                 type: 'string',
               },
-              description: {
+              color: {
                 type: 'string',
+              },
+              stock: {
+                type: 'number',
+              },
+              price: {
+                type: 'number',
               },
             }
           }
@@ -46,42 +52,44 @@ export class ProductController {
       },
     })
     payload: {
-      categoryId: 'string',
-      name: 'string',
-      description: 'string',
+      productId: 'string',
+      size: 'string',
+      color: 'string',
+      stock: number,
+      price: number,
     }) {
-    const result = await this.productService.create(
-      payload.categoryId,
-      payload.name,
-      payload.description,
+    const result = await this.productVariantService.create(
+      payload.productId,
+      payload.size,
+      payload.color,
+      payload.stock,
+      payload.price
     );
     if (result.statusCode === 400) {
       throw {
         statusCode: 400,
-        message: 'Cannot find category ',
+        message: 'Cannot find product ',
       };
     }
     return result;
   }
 
   // @authenticate('jwt')
-  @get('/products/count', {
-    summary: 'Count products API Endpoint',
+  @get('/product-variants/count', {
+    summary: 'Count product-variants API Endpoint',
     responses: {
       '200': {},
       '404': {description: 'Data not found'},
     },
   })
   async count() {
-    const data = await this.productService.countProduct();
-
+    const data = await this.productVariantService.count();
     if (data === 0) {
       return {
         statusCode: 404,
         message: 'Data not found'
       }
     }
-
     return {
       statusCode: 200,
       message: 'success',
@@ -90,15 +98,15 @@ export class ProductController {
   }
 
   // @authenticate('jwt')
-  @get('/products', {
-    summary: 'List of products API Endpoint',
+  @get('/product-variants', {
+    summary: 'List of product-variants API Endpoint',
     responses: {
       '200': {},
       '404': {description: 'Data not found'},
     },
   })
   async find() {
-    const data = await this.productService.findAll();
+    const data = await this.productVariantService.findAll();
     if (!data || data.length === 0) {
       throw {
         statusCode: 404,
@@ -113,8 +121,8 @@ export class ProductController {
   }
 
   // @authenticate('jwt')
-  @get('/products/{id}', {
-    summary: 'Get products by ID API Endpoint',
+  @get('/product-variants/{id}', {
+    summary: 'Get product-variants by ID API Endpoint',
     responses: {
       '200': {},
       '404': {description: 'Data not found'},
@@ -123,7 +131,7 @@ export class ProductController {
   async findById(
     @param.path.string('id') id: string,
   ) {
-    const data = await this.productService.findById(id);
+    const data = await this.productVariantService.findById(id);
     if (!data) {
       throw {
         statusCode: 404,
@@ -138,8 +146,8 @@ export class ProductController {
   }
 
   // @authenticate('jwt')
-  @patch('/products/{id}', {
-    summary: 'Update products API Endpoint',
+  @patch('/product-variants/{id}', {
+    summary: 'Update product-variants API Endpoint',
     responses: {
       '200': {},
       '404': {description: 'Data not found'},
@@ -148,19 +156,25 @@ export class ProductController {
   async updateById(
     @param.path.string('id') id: string,
     @requestBody({
-      description: 'Update products API Endpoint',
+      description: 'Update product-variants API Endpoint',
       content: {
         'application/json': {
           schema: {
             properties: {
-              categoryId: {
+              productId: {
                 type: 'string',
               },
-              name: {
+              size: {
                 type: 'string',
               },
-              description: {
+              color: {
                 type: 'string',
+              },
+              stock: {
+                type: 'number',
+              },
+              price: {
+                type: 'number',
               },
             }
           }
@@ -168,11 +182,13 @@ export class ProductController {
       },
     })
     payload: {
-      categoryId: 'string',
-      name: 'string',
-      description: 'string',
+      productId: 'string',
+      size: 'string',
+      color: 'string',
+      stock: number,
+      price: number,
     }) {
-    const result = await this.productService.updateById(id, payload);
+    const result = await this.productVariantService.updateById(id, payload);
     if (result.statusCode === 404) {
       throw {
         statusCode: 404,
@@ -183,15 +199,15 @@ export class ProductController {
   }
 
   // @authenticate('jwt')
-  @del('/products/{id}', {
-    summary: 'Delete products API Endpoint',
+  @del('/product-variants/{id}', {
+    summary: 'Delete product-variants API Endpoint',
     responses: {
       '200': {},
       '404': {description: 'Data not found or data already deleted'},
     },
   })
   async deleteById(@param.path.string('id') id: string) {
-    const result = await this.productService.deleteProductById(id);
+    const result = await this.productVariantService.deleteById(id);
     if (result.statusCode === 404) {
       throw {
         statusCode: 404,

@@ -15,7 +15,7 @@ dotenv.config();
 export type Credentials = {
   email: string;
   password: string;
-};
+}
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class UserService {
@@ -101,6 +101,7 @@ export class UserService {
     const customerCredentials = await this.customerCredentialsRepository.findOne({
       where: findCredentialsQuery,
     });
+    console.log(customerCredentials)
 
     if (adminCredentials) {
       const foundAdmin = await this.adminRepository.findOne({

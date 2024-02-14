@@ -9,9 +9,9 @@ import {
 import {HttpErrors} from '@loopback/rest';
 import {DateTime} from 'luxon';
 import {MongoDbDataSource} from '../datasources';
-import {User} from '../models';
 import {Session, SessionRelations} from '../models/session.model';
 import {UserRepository} from './user.repository';
+import {User} from '../models/user.model';
 
 export class SessionRepository extends DefaultCrudRepository<
   Session,

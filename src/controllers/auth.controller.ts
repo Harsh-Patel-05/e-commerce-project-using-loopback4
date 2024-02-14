@@ -294,7 +294,7 @@ export class AuthController {
       throw new HttpErrors.InternalServerError('Error during OTP verification.');
     }
   }
-  
+
   //Resend OTP API Endpoint
   // @post('/auth/resendOtp/{otpRef}', {
   //   summary: 'Resend Otp API Endpoint',

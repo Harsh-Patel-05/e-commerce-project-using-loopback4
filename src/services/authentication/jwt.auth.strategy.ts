@@ -4,9 +4,9 @@ import {repository} from '@loopback/repository';
 import {HttpErrors, Request, RestBindings} from '@loopback/rest';
 import {UserProfile, securityId} from '@loopback/security';
 import {TokenServiceBindings} from '../../keys';
-import {AdminRepository, SessionRepository, UserRepository} from '../../repositories';
-import {User} from '../../models';
 import {Session} from '../../models/session.model';
+import {User} from '../../models/user.model';
+import {AdminRepository, SessionRepository, UserRepository} from '../../repositories';
 
 export type AuthCredentials = {
   user?: User;

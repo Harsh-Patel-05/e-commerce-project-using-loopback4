@@ -12,7 +12,7 @@ export class Category extends Entity {
     type: 'string',
     id: true,
     generated: true,
-    mongodb:{dataType: 'ObjectID',}
+    mongodb: {dataType: 'ObjectID', }
   })
   id?: string;
 
