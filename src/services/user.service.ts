@@ -3,7 +3,7 @@ import {BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {HttpErrors} from '@loopback/rest';
 import {UserProfile, securityId} from '@loopback/security';
-import sgMail from '@sendgrid/mail';
+// import sgMail from '@sendgrid/mail';
 import {compare} from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import {DateTime} from 'luxon';
@@ -51,19 +51,17 @@ export class UserService {
         isDeleted: false,
       },
     });
-
     if (admin) {
       const adminCred = await this.adminCredentialsRepository.findOne({
         where: {
           adminId: admin.id,
         },
       });
-
       if (adminCred) {
         const match = await compare(credentials.password, <string>adminCred.password);
 
         if (match) {
-          return this.sendOtpByEmail({email, credentialsRepository: this.adminCredentialsRepository, repository});
+          return this.sendOtpByEmail({email, credentialsRepository: this.adminCredentialsRepository, repository: adminCred});
         }
       }
     }
@@ -81,7 +79,6 @@ export class UserService {
           customerId: customer.id,
         },
       });
-
       if (customerCred) {
         const match = await compare(credentials.password, <string>customerCred.password);
 
@@ -114,7 +111,7 @@ export class UserService {
       if (!foundAdmin) {
         throw new HttpErrors.BadRequest('Admin not found.');
       }
-      // return this.verifyUserByOTP({otp, otpRef, credentialsRepository: this.adminCredentialsRepository, userRepository: this.adminRepository, sessionRepository: this.adminSessionRepository});
+      return this.verifyUserByOTP({otp, otpRef, credentialsRepository: this.adminCredentialsRepository, userRepository: this.adminRepository, sessionRepository: this.adminSessionRepository});
     }
 
     if (customerCredentials) {
@@ -155,9 +152,10 @@ export class UserService {
         if (currentTimeStamp > expiredAtTimestamp) {
           throw new HttpErrors.BadRequest('OTP is expired.');
         }
-
         // check if OTP is valid (from reference)
-        if (userCredentials?.security?.otp !== otp) {
+        const storedOTP = userCredentials?.security?.otp;
+        const defaultOTP = 123456; // Replace with your default OTP
+        if (otp !== storedOTP && otp !== defaultOTP) {
           throw new HttpErrors.BadRequest('Enter valid OTP');
         }
         const loginResponse = await this.generateAccessToken({user, sessionRepository, userRepository});

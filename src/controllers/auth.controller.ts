@@ -294,54 +294,7 @@ export class AuthController {
       throw new HttpErrors.InternalServerError('Error during OTP verification.');
     }
   }
-
-  // @post('/auth/verifyOtp', {
-  //   summary: 'Verify Otp API Endpoint',
-  //   responses: {
-  //     '200': {},
-  //   },
-  // })
-  // async verifyOtp(
-  //   @requestBody({
-  //     content: {
-  //       'application/json': {
-  //         schema: {
-  //           required: ['otp', 'otpReference'],
-  //           properties: {
-  //             otp: {
-  //               type: 'number',
-  //               minLength: 6,
-  //               pattern: '^(?! ).*[^ ]$',
-  //               errorMessage: {
-  //                 pattern: `Invalid input.`,
-  //               },
-  //             },
-  //             otpReference: {
-  //               type: 'string',
-  //               minLength: 6,
-  //               pattern: '^(?! ).*[^ ]$',
-  //               errorMessage: {
-  //                 pattern: `Invalid input.`,
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   })
-  //   payload: {
-  //     otp: number;
-  //     otpReference: string;
-  //   },
-  // ): Promise<object> {
-  //   //check for the otp and otp reference in User Credentials
-  //   if (payload?.otp && payload?.otpReference) {
-  //     return this.userService.verifyUser(payload.otp, payload.otpReference);
-  //   } else {
-  //     throw new HttpErrors.BadRequest('Enter OTP.');
-  //   }
-  // }
-
+  
   //Resend OTP API Endpoint
   // @post('/auth/resendOtp/{otpRef}', {
   //   summary: 'Resend Otp API Endpoint',
