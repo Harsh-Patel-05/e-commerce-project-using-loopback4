@@ -36,6 +36,7 @@ export namespace Loopback4BoilerplatePublicConstants {
 export namespace EcommerceApplicationConstants {
   export const SENDGRID_CONSTANTS = {
     API_KEY: process.env.SENDGRID_API_KEY,
-    FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL
+    FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL,
+    TEMPLATEID: process.env.SENDGRID_TEMPLATEID
   };
 };

@@ -1,150 +1,226 @@
+import {service} from '@loopback/core';
 import {
-  Count,
-  CountSchema,
-  Filter,
-  FilterExcludingWhere,
-  repository,
-  Where,
+  repository
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
   del,
-  requestBody,
-  response,
+  get,
+  param,
+  patch,
+  post,
+  requestBody
 } from '@loopback/rest';
-import {Address} from '../models';
 import {AddressRepository} from '../repositories';
+import {AddressService} from '../services';
+
 
 export class AddressController {
   constructor(
     @repository(AddressRepository)
-    public addressRepository : AddressRepository,
-  ) {}
+    public addressRepository: AddressRepository,
+    @service(AddressService)
+    public addressService: AddressService,
+  ) { }
 
-  @post('/addresses')
-  @response(200, {
-    description: 'Address model instance',
-    content: {'application/json': {schema: getModelSchemaRef(Address)}},
+  // @authenticate('jwt')
+  @post('/address', {
+    summary: 'Create address API Endpoint',
+    responses: {
+      '200': {},
+    },
   })
   async create(
     @requestBody({
+      description: 'Create address API Endpoint',
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Address, {
-            title: 'NewAddress',
-            exclude: ['id'],
-          }),
+          schema: {
+            required: ['street', 'city', 'state', 'phone', 'pincode'],
+            properties: {
+              street: {
+                type: 'string',
+              },
+              city: {
+                type: 'string',
+              },
+              state: {
+                type: 'string',
+              },
+              phone: {
+                type: 'number',
+              },
+              pincode: {
+                type: 'string',
+              }
+            }
+          }
         },
       },
     })
-    address: Omit<Address, 'id'>,
-  ): Promise<Address> {
-    return this.addressRepository.create(address);
+    payload: {
+      street: 'string',
+      city: 'string',
+      state: 'string',
+      phone: number,
+      pincode: number
+    }) {
+    const data = await this.addressService.createAddress(
+      payload.street,
+      payload.city,
+      payload.state,
+      payload.phone,
+      payload.pincode
+    );
+
+    return {
+      statusCode: 200,
+      message: 'created successfully',
+      data,
+    };
   }
 
-  @get('/addresses/count')
-  @response(200, {
-    description: 'Address model count',
-    content: {'application/json': {schema: CountSchema}},
-  })
-  async count(
-    @param.where(Address) where?: Where<Address>,
-  ): Promise<Count> {
-    return this.addressRepository.count(where);
-  }
-
-  @get('/addresses')
-  @response(200, {
-    description: 'Array of Address model instances',
-    content: {
-      'application/json': {
-        schema: {
-          type: 'array',
-          items: getModelSchemaRef(Address, {includeRelations: true}),
-        },
-      },
+  // @authenticate('jwt')
+  @get('/addresses/count', {
+    summary: 'Count addresses API Endpoint',
+    responses: {
+      '200': {},
+      '404': {description: 'No addresses found'},
     },
   })
-  async find(
-    @param.filter(Address) filter?: Filter<Address>,
-  ): Promise<Address[]> {
-    return this.addressRepository.find(filter);
+  async count() {
+    const data = await this.addressService.countAddress();
+
+    if (data === 0) {
+      return {
+        statusCode: 404,
+        message: 'No address found'
+      }
+    }
+
+    return {
+      statusCode: 200,
+      message: 'success',
+      data
+    }
   }
 
-  @patch('/addresses')
-  @response(200, {
-    description: 'Address PATCH success count',
-    content: {'application/json': {schema: CountSchema}},
+  // @authenticate('jwt')
+  @get('/addresses', {
+    summary: 'List of address API Endpoint',
+    responses: {
+      '200': {},
+      '404': {description: 'No address found'},
+    },
   })
-  async updateAll(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(Address, {partial: true}),
-        },
-      },
-    })
-    address: Address,
-    @param.where(Address) where?: Where<Address>,
-  ): Promise<Count> {
-    return this.addressRepository.updateAll(address, where);
+  async find() {
+    const data = await this.addressService.findAll();
+    if (!data || data.length === 0) {
+      throw {
+        statusCode: 404,
+        message: 'No address found',
+      };
+    }
+    return {
+      statusCode: 200,
+      message: 'success',
+      data,
+    };
   }
 
-  @get('/addresses/{id}')
-  @response(200, {
-    description: 'Address model instance',
-    content: {
-      'application/json': {
-        schema: getModelSchemaRef(Address, {includeRelations: true}),
-      },
+  // @authenticate('jwt')
+  @get('/addresses/{id}', {
+    summary: 'Get address by ID API Endpoint',
+    responses: {
+      '200': {},
+      '404': {description: 'Address not found'},
     },
   })
   async findById(
     @param.path.string('id') id: string,
-    @param.filter(Address, {exclude: 'where'}) filter?: FilterExcludingWhere<Address>
-  ): Promise<Address> {
-    return this.addressRepository.findById(id, filter);
+  ) {
+    const data = await this.addressService.findAddressById(id);
+    if (!data) {
+      throw {
+        statusCode: 404,
+        message: 'Address not found',
+      };
+    }
+    return {
+      statusCode: 200,
+      message: 'success',
+      data,
+    };
   }
 
-  @patch('/addresses/{id}')
-  @response(204, {
-    description: 'Address PATCH success',
+  // @authenticate('jwt')
+  @patch('/addresses/{id}', {
+    summary: 'Update address API Endpoint',
+    responses: {
+      '200': {},
+      '404': {description: 'Address not found'},
+    },
   })
   async updateById(
     @param.path.string('id') id: string,
     @requestBody({
+      description: 'Create address API Endpoint',
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Address, {partial: true}),
+          schema: {
+            properties: {
+              street: {
+                type: 'string',
+              },
+              city: {
+                type: 'string',
+              },
+              state: {
+                type: 'string',
+              },
+              phone: {
+                type: 'number',
+              },
+              pincode: {
+                type: 'string',
+              }
+            }
+          }
         },
       },
     })
-    address: Address,
-  ): Promise<void> {
-    await this.addressRepository.updateById(id, address);
+    payload: {
+      street: 'string',
+      city: 'string',
+      state: 'string',
+      phone: number,
+      pincode: number
+    }) {
+    const result = await this.addressService.updateAddressById(id, payload);
+    if (result.statusCode === 404) {
+      throw {
+        statusCode: 404,
+        message: 'Address not found',
+      };
+    }
+    return result;
   }
 
-  @put('/addresses/{id}')
-  @response(204, {
-    description: 'Address PUT success',
+  // @authenticate('jwt')
+  @del('/addresses/{id}', {
+    summary: 'Delete address API Endpoint',
+    responses: {
+      '200': {},
+      '404': {description: 'Address not found or data already deleted'},
+    },
   })
-  async replaceById(
-    @param.path.string('id') id: string,
-    @requestBody() address: Address,
-  ): Promise<void> {
-    await this.addressRepository.replaceById(id, address);
-  }
-
-  @del('/addresses/{id}')
-  @response(204, {
-    description: 'Address DELETE success',
-  })
-  async deleteById(@param.path.string('id') id: string): Promise<void> {
-    await this.addressRepository.deleteById(id);
+  async deleteById(@param.path.string('id') id: string) {
+    const result = await this.addressService.deleteAddressById(id);
+    if (result.statusCode === 404) {
+      throw {
+        statusCode: 404,
+        message: 'Address not found or data already deleted',
+      };
+    }
+    return result;
   }
 }

@@ -3,7 +3,7 @@ import {BindingScope, inject, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {HttpErrors} from '@loopback/rest';
 import {UserProfile, securityId} from '@loopback/security';
-// import sgMail from '@sendgrid/mail';
+import sgMail from '@sendgrid/mail';
 import {compare} from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import {DateTime} from 'luxon';
@@ -228,7 +228,7 @@ export class UserService {
 
   //send OTP service method
   async sendOtpByEmail(params: {email: string, credentialsRepository: any, repository: any}) {
-    const sgMail = require('@sendgrid/mail');
+    // const sgMail = require('@sendgrid/mail');
     sgMail.setApiKey(<string>process.env.SENDGRID_API_KEY);
 
     const {email, repository, credentialsRepository} = params
@@ -238,11 +238,17 @@ export class UserService {
     expirationTime.setMinutes(expirationTime.getMinutes() + 2);
 
     /* Send OTP via email */
+    const templateId = 'd-53f3c6ebe4ca41ee95baa5213b63ab61'; // Replace with your actual SendGrid template ID
+    const dynamicTemplateData = {
+      otp,
+      otpReference,
+    };
+
     const msg = {
       to: email,
       from: 'harsh.abstud@gmail.com',
-      subject: 'Your OTP for Verification',
-      html: `<p style="color:black; font-size:25px;letter-spacing:2px;">Your OTP for verification is: <b>${otp}</b></p><p style="color:black; font-size:25px;letter-spacing:2px;">Your OTP Reference for verification is: <b>${otpReference}</b></p>`
+      templateId,
+      dynamicTemplateData,
     };
 
     /* Save OTP in the database */
