@@ -1,4 +1,6 @@
-import {service} from '@loopback/core';
+import {
+  repository
+} from '@loopback/repository';
 import {
   del,
   get,
@@ -8,6 +10,7 @@ import {
   requestBody
 } from '@loopback/rest';
 import {CategoryService} from '../services';
+import {service} from '@loopback/core';
 
 export class CategoryController {
   constructor(

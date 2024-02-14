@@ -1,7 +1,7 @@
-import {injectable, /* inject, */ BindingScope} from '@loopback/core';
+import { /* inject, */ BindingScope, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {CategoryRepository} from '../repositories';
 import {Category} from '../models';
+import {CategoryRepository} from '../repositories';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class CategoryService {
@@ -13,7 +13,7 @@ export class CategoryService {
   //create category repository
   async createCategory(
     name: string,
-  ): Promise<Category> {
+  ) {
     return this.categoryRepository.create({
       name: name,
     });

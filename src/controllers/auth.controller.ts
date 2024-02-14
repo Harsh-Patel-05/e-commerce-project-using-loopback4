@@ -2,7 +2,6 @@ import {inject, service} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {HttpErrors, Request, RestBindings, post, requestBody} from '@loopback/rest';
 import {genSalt, hash} from 'bcryptjs';
-import {UserKeys} from '../keys/user.keys';
 import {
   AdminCredentialsRepository,
   AdminRepository,
@@ -14,6 +13,7 @@ import {
   UserRepository
 } from '../repositories';
 import {UserService} from '../services';
+import {UserKeys} from '../shared/keys/user.keys';
 
 export class AuthController {
   constructor(
