@@ -25,7 +25,7 @@ export class TempResetToken extends Entity {
     type: 'date',
     default: null,
   })
-  expiresAt?: DateTime;
+  expiresAt?: Date;
 
   @property({
     type: 'string',

@@ -9,3 +9,4 @@ export * from './product.model';
 export * from './category.model';
 export * from './product-variant.model';
 export * from './temp-reset-token.model';
+export * from './cart.model';

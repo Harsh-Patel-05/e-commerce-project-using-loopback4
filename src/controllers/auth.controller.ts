@@ -295,104 +295,7 @@ export class AuthController {
     }
   }
 
-  //Resend OTP API Endpoint
-  // @post('/auth/resendOtp/{otpRef}', {
-  //   summary: 'Resend Otp API Endpoint',
-  //   responses: {
-  //     '200': {},
-  //   },
-  // })
-  // async resendOtp(
-  //   @param.path.string('otpRef') otpRef: string,
-  // ) {
-  //   const otp = await this.userService.resendOTP(otpRef);
-  //   return otp;
-  // }
-
-  // // //WhoAmI API Endpoint
-  // @authenticate('jwt')
-  // @get('auth/who-am-i', {
-  //   summary: 'Returns the logged in user info',
-  //   responses: {
-  //     '200': {
-  //       content: {
-  //         'application/json': {
-  //           schema: {
-  //             type: 'object',
-  //             properties: {
-  //               user: {
-  //                 'x-ts-type': User,
-  //               },
-  //               session: {
-  //                 'x-ts-type': Session,
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   },
-  // })
-  // async whoAmI(
-  //   @inject(SecurityBindings.USER)
-  //   authCredentials: AuthCredentials,
-  // ): Promise<object> {
-  //   return authCredentials;
-  // }
-
-  // // //Logout API Endpoint
-  // @authenticate('jwt')
-  // @post('/auth/logout', {
-  //   summary: 'Logout API Endpoint',
-  //   responses: {
-  //     '200': {
-  //       content: {
-  //         'application/json': {
-  //           schema: {
-  //             type: 'object',
-  //             properties: {
-  //               message: {
-  //                 type: 'string',
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   }
-  // })
-  // async logout() {
-  //   const token = this.request.headers.authorization?.split(' ')[1];
-
-  //   return await this.sessionRepository.findOne({
-  //     where: {
-  //       accessToken: token,
-  //       expireAt: {gte: new Date(Date.now())}
-  //     }
-  //   }).then(async (res) => {
-  //     return await this.sessionRepository.updateById(res.id, {
-  //       status: 'expired',
-  //       expiredAt: DateTime.utc().toISO(),
-  //     }).then((res) => {
-  //       return {
-  //         statusCode: 200,
-  //         message: 'logout successful'
-  //       }
-  //     }).catch((err) => {
-  //       return {
-  //         statusCode: 400,
-  //         message: "Couldn't logout",
-  //       };
-  //     });
-  //   }).catch((err) => {
-  //     return {
-  //       statusCode: 400,
-  //       message: "Couldn't logout",
-  //     };
-  //   });
-  // }
-
-  // //Forgot-Password API Endpoint
+  //Forgot-Password API Endpoint
   @post('/forgot-password', {
     summary: 'Forgot password API Endpoint',
     responses: {
@@ -423,54 +326,44 @@ export class AuthController {
     return this.userService.forgotPassword(payload.email);
   }
 
-  // //Reset-Password OTP API Endpoint
-  // @post('/reset-password', {
-  //   summary: 'Reset password API Endpoint',
+  //Reset-Password OTP API Endpoint
+  @post('/reset-password', {
+    summary: 'Reset password API Endpoint',
+    responses: {
+      '200': {},
+    },
+  })
+  async resetPassword(@requestBody({
+    description: 'Reset password API Endpoint',
+    content: {
+      'application/json': {
+        schema: {
+          required: ['token', 'password', 'confirPassword'],
+          properties: {
+            token: {type: 'string'},
+            password: {type: 'string'},
+            confirPassword: {type: 'string'}
+          },
+        },
+      },
+    },
+  })
+  payload: {
+    token: string;
+    password: string;
+    confirPassword: string;
+  }) {
+    return this.userService.resetPassword(payload);
+  }
+
+  //Whoami API Endpoint
+  // @post('/whoami', {
+  //   summary: 'Whoami API Endpoint',
   //   responses: {
   //     '200': {},
   //   },
   // })
-  // async resetPassword(@requestBody({
-  //   description: 'Reset password API Endpoint',
-  //   content: {
-  //     'application/json': {
-  //       schema: {
-  //         required: ['token', 'newpassword'],
-  //         properties: {
-  //           token: {type: 'string'},
-  //           newpassword: {type: 'string'}
-  //         },
-  //       },
-  //     },
-  //   },
-  // })
-  // payload: {
-  //   token: string;
-  //   newpassword: string;
-  // }) {
-
-  //   // Verify the reset token
-  //   const user = await this.forgotpasswordRepository.findOne({
-  //     where: {
-  //       token: payload.token,
-  //     }
-  //   });
-
-  //   if (user?.token !== payload.token) {
-  //     throw new HttpErrors.BadRequest('Invalid reset token');
-  //   }
-
-  //   // Hash the new password
-  //   const hashedPassword = await hash(payload.newpassword, await genSalt());
-  //   const updatepass = await this.userCredentialsRepository.updateAll({
-  //     password: hashedPassword,
-  //   });
-
-  //   // const updateUser = await this.userRepository.updateById()
-
-  //   return {
-  //     statusCode: 200,
-  //     message: 'Password updated successfully',
-  //   }
+  // async whoami(req) {
+  //   return this.userService.whoami();
   // }
 }

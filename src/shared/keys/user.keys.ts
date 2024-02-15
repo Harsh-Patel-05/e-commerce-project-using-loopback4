@@ -8,4 +8,6 @@ export class UserKeys {
     static USER_NOT_EXIST = 'User does not exist';
     static ADMIN_NOT_FOUND = 'Admin not found';
     static ADMIN_ONLY = 'Only admin can do this action';
+    static CUSTOMER_NOT_FOUND = 'Admin not found';
+
 }
