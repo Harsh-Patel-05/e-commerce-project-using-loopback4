@@ -393,35 +393,35 @@ export class AuthController {
   // }
 
   // //Forgot-Password API Endpoint
-  // @post('/forgot-password', {
-  //   summary: 'Forgot password API Endpoint',
-  //   responses: {
-  //     '200': {},
-  //   },
-  // })
-  // async forgotPassword(@requestBody({
-  //   description: 'Forgot password API Endpoint',
-  //   content: {
-  //     'application/json': {
-  //       schema: {
-  //         required: ['email'],
-  //         properties: {
-  //           email: {
-  //             type: 'string',
-  //             format: 'email',
-  //             maxLength: 254,
-  //             minLength: 5,
-  //           },
-  //         },
-  //       },
-  //     },
-  //   },
-  // })
-  // payload: {
-  //   email: string;
-  // }): Promise<void> {
-  //   return this.userService.forgotpassword(payload.email);
-  // }
+  @post('/forgot-password', {
+    summary: 'Forgot password API Endpoint',
+    responses: {
+      '200': {},
+    },
+  })
+  async forgotPassword(@requestBody({
+    description: 'Forgot password API Endpoint',
+    content: {
+      'application/json': {
+        schema: {
+          required: ['email'],
+          properties: {
+            email: {
+              type: 'string',
+              format: 'email',
+              maxLength: 254,
+              minLength: 5,
+            },
+          },
+        },
+      },
+    },
+  })
+  payload: {
+    email: string;
+  }) {
+    return this.userService.forgotPassword(payload.email);
+  }
 
   // //Reset-Password OTP API Endpoint
   // @post('/reset-password', {

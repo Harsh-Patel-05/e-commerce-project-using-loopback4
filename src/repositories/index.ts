@@ -11,3 +11,4 @@ export * from './address.repository';
 export * from './product.repository';
 export * from './category.repository';
 export * from './product-variant.repository';
+export * from './temp-reset-token.repository';

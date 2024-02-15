@@ -4,13 +4,18 @@ import {repository} from '@loopback/repository';
 import {HttpErrors} from '@loopback/rest';
 import {UserProfile, securityId} from '@loopback/security';
 import sgMail from '@sendgrid/mail';
-import {compare} from 'bcryptjs';
+import {compare, genSalt, hash} from 'bcryptjs';
 import * as dotenv from 'dotenv';
 import {DateTime} from 'luxon';
 import otpGenerator from 'otp-generator';
-import {TokenServiceBindings} from '../keys';
-import {AdminCredentialsRepository, AdminRepository, AdminSessionRepository, CustomerCredentialsRepository, CustomerRepository, CustomerSessionRepository, SessionRepository, UserCredentialsRepository, UserRepository} from '../repositories';
+import {TokenServiceBindings, TokenServiceConstants} from '../keys';
+import {AdminCredentialsRepository, AdminRepository, AdminSessionRepository, CustomerCredentialsRepository, CustomerRepository, CustomerSessionRepository, SessionRepository, TempResetTokenRepository, UserCredentialsRepository, UserRepository} from '../repositories';
+import {AuthKeys} from '../shared/keys/auth.keys';
 dotenv.config();
+// import * as jwt from 'jsonwebtoken';
+const jwt = require('jsonwebtoken');
+
+
 
 export type Credentials = {
   email: string;
@@ -39,7 +44,9 @@ export class UserService {
     @repository(AdminSessionRepository)
     public adminSessionRepository: AdminSessionRepository,
     @repository(CustomerSessionRepository)
-    public customerSessionRepository: CustomerSessionRepository,) { }
+    public customerSessionRepository: CustomerSessionRepository,
+    @repository(TempResetTokenRepository)
+    public tempResetTokenRepository: TempResetTokenRepository) { }
 
   //verify Credentials service method
   async verifyCredentials(credentials: Credentials) {
@@ -172,7 +179,6 @@ export class UserService {
     }
   }
 
-
   //generateToken service method
   async generateAccessToken(params: {user: any, sessionRepository: any, userRepository: any}): Promise<any> {
     const {user, sessionRepository, userRepository} = params;
@@ -275,5 +281,203 @@ export class UserService {
         message: 'OTP is not sent, Error !',
       };
     });
+  }
+
+  //forgot password service method
+  async forgotPassword(email: string) {
+    sgMail.setApiKey(<string>process.env.SENDGRID_API_KEY);
+
+    const customer = await this.customerRepository.findOne({
+      where: {
+        email,
+      },
+    });
+
+    if (!customer) {
+      const admin = await this.adminRepository.findOne({
+        where: {
+          email,
+        },
+      });
+      if (!admin) {
+        return {
+          statusCode: 200,
+          message: AuthKeys.USER_NOT_FOUND
+        };
+      }
+      const token = jwt.sign({adminId: admin.id}, TokenServiceConstants.TOKEN_SECRET_VALUE, {
+        expiresIn: TokenServiceConstants.TOKEN_EXPIRES_IN_VALUE, // set the expiration time as needed
+      });
+      try {
+        await this.tempResetTokenRepository.create({
+          tempId: admin.id,
+          token,
+          expiresAt: new Date(Date.now() + 5 * 60 * 600000),
+        });
+      } catch (err) {
+        return {
+          statusCode: 400,
+          message: AuthKeys.GONE_WRONG
+        };
+      }
+      const templateId = 'd-468d376d9db74a259f8db1a2d449598c'; // Replace with your actual SendGrid template ID
+      const dynamicTemplateData = {
+        token
+      };
+      const mail = {
+        to: admin.email,
+        from: 'harsh.abstud@gmail.com',
+        templateId,
+        dynamicTemplateData,
+      };
+
+      try {
+        await sgMail.send(mail);
+      } catch (err) {
+        return {
+          statusCode: 400,
+          message: AuthKeys.GONE_WRONG
+        };
+      }
+      return {
+        statusCode: 200,
+        message: AuthKeys.TOKEN_SENT,
+      };
+    }
+
+    const token = jwt.sign({customerId: customer.id}, TokenServiceConstants.TOKEN_SECRET_VALUE, {
+      expiresIn: TokenServiceConstants.TOKEN_EXPIRES_IN_VALUE, // set the expiration time as needed
+    });
+    try {
+      await this.tempResetTokenRepository.create({
+        tempId: customer.id,
+        token,
+        expiresAt: new Date(Date.now() + 5 * 60 * 600000),
+      });
+    } catch (err) {
+      return {
+        statusCode: 400,
+        message: AuthKeys.GONE_WRONG
+      };
+    }
+    const templateId = 'd-468d376d9db74a259f8db1a2d449598c'; // Replace with your actual SendGrid template ID
+    const dynamicTemplateData = {
+      token
+    };
+    const mail = {
+      to: customer.email,
+      from: 'harsh.abstud@gmail.com',
+      templateId,
+      dynamicTemplateData,
+    };
+
+    try {
+      await sgMail.send(mail);
+    } catch (err) {
+      return {
+        statusCode: 400,
+        message: AuthKeys.GONE_WRONG
+      };
+    }
+    return {
+      statusCode: 200,
+      message: AuthKeys.TOKEN_SENT,
+    };
+  }
+
+  //reset password service method
+  async resetPassword(params: {token: string, password: string, confirPassword: string}) {
+    const {token, password, confirPassword} = params;
+    const tempToken = await this.tempResetTokenRepository.findOne({
+      where: {
+        token,
+        expiresAt: {
+          gte: new Date(Date.now())
+        },
+      },
+    });
+
+    if (!tempToken) {
+      return {
+        statusCode: 400,
+        message: AuthKeys.INVALID_TOKEN
+      };
+    }
+
+    if (password !== confirPassword) {
+      return {
+        statusCode: 400,
+        message: AuthKeys.INVALID_CREDENTIALS
+      };
+    }
+
+    const admin = await this.adminRepository.findOne({
+      where: {
+        id: tempToken.tempId,
+      },
+    });
+    if (!admin) {
+      const customer = await this.customerRepository.findOne({
+        where: {
+          id: tempToken.tempId,
+        },
+      });
+      if (!customer) {
+        return {
+          statusCode: 400,
+          message: AuthKeys.USER_NOT_FOUND
+        };
+      }
+      const customerCred = await this.customerCredentialsRepository.findOne({
+        where: {
+          customerId: customer.id,
+        },
+      });
+      if (!customerCred) {
+        return {
+          statusCode: 400,
+          message: AuthKeys.USER_NOT_FOUND
+        };
+      }
+      const hashedPassword = await hash(password, await genSalt());
+      await this.customerCredentialsRepository.updateById(customerCred.id, {
+        password: hashedPassword,
+      });
+      await this.tempResetTokenRepository.delete({
+        where: {
+          id: tempToken.id,
+        },
+      });
+      return {
+        statusCode: 200,
+        message: AuthKeys.PASSWORD_CHANGED,
+      };
+    }
+    const adminCred = await this.prisma.adminCredential.findFirst({
+      where: {
+        adminId: admin.id,
+      },
+    });
+    if (!adminCred) {
+      throw new BadRequestException(AuthKeys.USER_NOT_FOUND);
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await this.prisma.adminCredential.update({
+      where: {
+        id: adminCred.id,
+      },
+      data: {
+        password: hashedPassword,
+      },
+    });
+    await this.prisma.tempResetToken.delete({
+      where: {
+        id: tempToken.id,
+      },
+    });
+    return {
+      statusCode: HttpStatus.OK,
+      message: AuthKeys.PASSWORD_CHANGED,
+    };
   }
 }
