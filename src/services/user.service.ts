@@ -12,10 +12,7 @@ import {TokenServiceBindings, TokenServiceConstants} from '../keys';
 import {AdminCredentialsRepository, AdminRepository, AdminSessionRepository, CustomerCredentialsRepository, CustomerRepository, CustomerSessionRepository, SessionRepository, TempResetTokenRepository, UserCredentialsRepository, UserRepository} from '../repositories';
 import {AuthKeys} from '../shared/keys/auth.keys';
 dotenv.config();
-// import * as jwt from 'jsonwebtoken';
 const jwt = require('jsonwebtoken');
-
-
 
 export type Credentials = {
   email: string;
@@ -46,7 +43,7 @@ export class UserService {
     @repository(CustomerSessionRepository)
     public customerSessionRepository: CustomerSessionRepository,
     @repository(TempResetTokenRepository)
-    public tempResetTokenRepository: TempResetTokenRepository) { }
+    public tempResetTokenRepository: TempResetTokenRepository,) { }
 
   //verify Credentials service method
   async verifyCredentials(credentials: Credentials) {
@@ -155,13 +152,19 @@ export class UserService {
         const currentTimeStamp = DateTime.utc().toMillis();
 
         if (currentTimeStamp > expiredAtTimestamp) {
-          throw new HttpErrors.BadRequest('OTP is expired.');
+          return {
+            statusCode: 404,
+            message: 'OTP is expired.'
+          };
         }
         // check if OTP is valid (from reference)
         const storedOTP = userCredentials?.security?.otp;
         const defaultOTP = 123456; // Replace with your default OTP
         if (otp !== storedOTP && otp !== defaultOTP) {
-          throw new HttpErrors.BadRequest('Enter valid OTP');
+          return {
+            statusCode: 404,
+            message: 'Enter Valid OTP.'
+          };
         }
         const loginResponse = await this.generateAccessToken({user, sessionRepository, userRepository});
         verifyUserResponse.session = loginResponse.session;
@@ -455,50 +458,4 @@ export class UserService {
       message: AuthKeys.PASSWORD_CHANGED,
     };
   }
-
-  //whoami service method
-  // async whoami(request: any) {
-  //   const {user} = request;
-  //   const admin = await this.adminRepository.findOne({
-  //     where: {
-  //       id: user.id,
-  //     }
-  //   });
-  //   if (admin) {
-  //     const adminCred = await this.adminCredentialsRepository.findOne({
-  //       where: {
-  //         adminId: admin.id,
-  //       }
-  //     });
-  //     return {
-  //       statusCode: 200,
-  //       message: AuthKeys.USER_FETCHED,
-  //       admin,
-  //       adminCred,
-  //     };
-  //   }
-
-  //   const customer = await this.customerRepository.findOne({
-  //     where: {
-  //       id: user.id,
-  //     }
-  //   });
-  //   if (customer) {
-  //     const customerCred = await this.customerCredentialsRepository.findOne({
-  //       where: {
-  //         customerId: customer.id,
-  //       }
-  //     });
-  //     return {
-  //       statusCode: 200,
-  //       message: AuthKeys.USER_FETCHED,
-  //       customer,
-  //       customerCred,
-  //     };
-  //   }
-  //   return {
-  //     statusCode: 404,
-  //     message: AuthKeys.NOT_REGISTERD
-  //   };
-  // }
 }

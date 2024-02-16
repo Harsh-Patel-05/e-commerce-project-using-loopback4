@@ -1,11 +1,24 @@
 import {Entity, model, property} from '@loopback/repository';
 
-@model()
+@model({
+  settings: {
+    strictObjectIDCoercion: true,
+  },
+})
 export class Cart extends Entity {
   @property({
     type: 'string',
+    id: true,
+    generated: true,
+    mongodb: {dataType: 'ObjectId'},
   })
-  id?: string;
+  id: string;
+
+  @property({
+    type: 'string',
+    required: true,
+  })
+  name: string;
 
 
   constructor(data?: Partial<Cart>) {

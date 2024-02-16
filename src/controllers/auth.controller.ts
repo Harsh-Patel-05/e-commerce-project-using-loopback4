@@ -1,25 +1,24 @@
 import {authenticate} from '@loopback/authentication';
 import {inject, service} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {HttpErrors, Request, RestBindings, get, post, requestBody} from '@loopback/rest';
-import {SecurityBindings} from '@loopback/security';
+import {HttpErrors, Request, RestBindings, post, requestBody} from '@loopback/rest';
 import {genSalt, hash} from 'bcryptjs';
-import {Session} from '../models/session.model';
-import {User} from '../models/user.model';
+import {DateTime} from 'luxon';
 import {
   AdminCredentialsRepository,
   AdminRepository,
+  AdminSessionRepository,
   CustomerCredentialsRepository,
   CustomerRepository,
+  CustomerSessionRepository,
   // ForgotpasswordRepository,
   SessionRepository,
   UserCredentialsRepository,
   UserRepository
 } from '../repositories';
 import {UserService} from '../services';
-import {AuthCredentials} from '../services/authentication/jwt.auth.strategy';
+import {AuthKeys} from '../shared/keys/auth.keys';
 import {UserKeys} from '../shared/keys/user.keys';
-
 
 
 export class AuthController {
@@ -37,10 +36,14 @@ export class AuthController {
     public adminRepository: AdminRepository,
     @repository(AdminCredentialsRepository)
     public adminCredentialsRepository: AdminCredentialsRepository,
+    @repository(AdminSessionRepository)
+    public adminSessionRepository: AdminSessionRepository,
     @repository(CustomerRepository)
     public customerRepository: CustomerRepository,
     @repository(CustomerCredentialsRepository)
     public customerCredentialsRepository: CustomerCredentialsRepository,
+    @repository(CustomerSessionRepository)
+    public customerSessionRepository: CustomerSessionRepository,
   ) { }
 
   //Sign up API Endpoint
@@ -283,22 +286,11 @@ export class AuthController {
       otpReference: string;
     },
   ): Promise<object> {
-    try {
-      // Check for the otp and otp reference in User Credentials
-      if (payload?.otp && payload?.otpReference) {
-        const result = await this.userService.verifyUser(payload.otp, payload.otpReference);
-        return {
-          statusCode: 200,
-          message: 'Verification successful',
-          result,
-        };
-      } else {
-        throw new HttpErrors.BadRequest('Enter OTP and OTP Reference.');
-      }
-    } catch (error) {
-      // Handle specific errors or log them
-      console.error('Error during OTP verification:', error);
-      throw new HttpErrors.InternalServerError('Error during OTP verification.');
+    //check for the otp and otp reference in User Credentials
+    if (payload?.otp && payload?.otpReference) {
+      return this.userService.verifyUser(payload.otp, payload.otpReference);
+    } else {
+      throw new HttpErrors.BadRequest('Enter OTP.');
     }
   }
 
@@ -363,10 +355,10 @@ export class AuthController {
     return this.userService.resetPassword(payload);
   }
 
-  //Whoami API Endpoint
+  //Logout API Endpoint
   @authenticate('jwt')
-  @get('auth/who-am-i', {
-    summary: 'Returns the logged in user info',
+  @post('/auth/logout', {
+    summary: 'Logout API Endpoint',
     responses: {
       '200': {
         content: {
@@ -374,23 +366,55 @@ export class AuthController {
             schema: {
               type: 'object',
               properties: {
-                user: {
-                  'x-ts-type': User,
-                },
-                session: {
-                  'x-ts-type': Session,
+                message: {
+                  type: 'string',
                 },
               },
             },
           },
         },
       },
-    },
+    }
   })
-  async whoAmI(
-    @inject(SecurityBindings.USER)
-    authCredentials: AuthCredentials,
-  ): Promise<object> {
-    return authCredentials;
+  async logout() {
+    const token = this.request.headers.authorization?.split(' ')[1];
+
+    const adminSession = await this.adminSessionRepository.findOne({
+      where: {
+        accessToken: token,
+        expireAt: {gte: new Date(Date.now())}
+      }
+    });
+    if (adminSession) {
+      const admin = await this.sessionRepository.updateById(adminSession.id, {
+        status: 'expired',
+        expiredAt: DateTime.utc().toISO(),
+      });
+      return {
+        statusCode: 200,
+        message: AuthKeys.LOGIN_SUCCESS,
+      };
+    }
+
+    const customerSession = await this.customerSessionRepository.findOne({
+      where: {
+        accessToken: token,
+        expireAt: {gte: new Date(Date.now())}
+      }
+    });
+    if (customerSession) {
+      const customer = await this.customerSessionRepository.updateById(customerSession.id, {
+        status: 'expired',
+        expiredAt: DateTime.utc().toISO(),
+      });
+      return {
+        statusCode: 200,
+        message: AuthKeys.LOGIN_SUCCESS,
+      };
+    }
+    return {
+      statusCode: 404,
+      message: AuthKeys.NOT_LOGGED_IN
+    };
   }
 }
