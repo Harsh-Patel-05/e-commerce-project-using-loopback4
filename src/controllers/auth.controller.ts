@@ -1,7 +1,11 @@
+import {authenticate} from '@loopback/authentication';
 import {inject, service} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {HttpErrors, Request, RestBindings, post, requestBody} from '@loopback/rest';
+import {HttpErrors, Request, RestBindings, get, post, requestBody} from '@loopback/rest';
+import {SecurityBindings} from '@loopback/security';
 import {genSalt, hash} from 'bcryptjs';
+import {Session} from '../models/session.model';
+import {User} from '../models/user.model';
 import {
   AdminCredentialsRepository,
   AdminRepository,
@@ -13,7 +17,10 @@ import {
   UserRepository
 } from '../repositories';
 import {UserService} from '../services';
+import {AuthCredentials} from '../services/authentication/jwt.auth.strategy';
 import {UserKeys} from '../shared/keys/user.keys';
+
+
 
 export class AuthController {
   constructor(
@@ -357,13 +364,33 @@ export class AuthController {
   }
 
   //Whoami API Endpoint
-  // @post('/whoami', {
-  //   summary: 'Whoami API Endpoint',
-  //   responses: {
-  //     '200': {},
-  //   },
-  // })
-  // async whoami(req) {
-  //   return this.userService.whoami();
-  // }
+  @authenticate('jwt')
+  @get('auth/who-am-i', {
+    summary: 'Returns the logged in user info',
+    responses: {
+      '200': {
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                user: {
+                  'x-ts-type': User,
+                },
+                session: {
+                  'x-ts-type': Session,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  async whoAmI(
+    @inject(SecurityBindings.USER)
+    authCredentials: AuthCredentials,
+  ): Promise<object> {
+    return authCredentials;
+  }
 }
