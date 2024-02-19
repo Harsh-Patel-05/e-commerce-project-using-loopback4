@@ -1,4 +1,5 @@
-import {service} from '@loopback/core';
+import {authenticate} from '@loopback/authentication';
+import {inject, service} from '@loopback/core';
 import {
   del,
   get,
@@ -7,6 +8,7 @@ import {
   post,
   requestBody
 } from '@loopback/rest';
+import {SecurityBindings, UserProfile, securityId} from '@loopback/security';
 import {ProductService} from '../services';
 
 export class ProductController {
@@ -15,7 +17,7 @@ export class ProductController {
     public productService: ProductService,
   ) { }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @post('/products', {
     summary: 'Create product API Endpoint',
     responses: {
@@ -25,7 +27,7 @@ export class ProductController {
   })
   async create(
     @requestBody({
-      description: 'Create product API Endpoint',
+      description: 'Create products API Endpoint',
       content: {
         'application/json': {
           schema: {
@@ -46,25 +48,16 @@ export class ProductController {
       },
     })
     payload: {
-      categoryId: 'string',
-      name: 'string',
-      description: 'string',
-    }) {
-    const result = await this.productService.create(
-      payload.categoryId,
-      payload.name,
-      payload.description,
-    );
-    if (result.statusCode === 400) {
-      throw {
-        statusCode: 400,
-        message: 'Cannot find category ',
-      };
-    }
-    return result;
+      categoryId: string,
+      name: string,
+      description: string,
+    },
+    @inject(SecurityBindings.USER) user: UserProfile,
+  ) {
+    return this.productService.create(payload, user[securityId]);
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @get('/products/count', {
     summary: 'Count products API Endpoint',
     responses: {
@@ -73,23 +66,10 @@ export class ProductController {
     },
   })
   async count() {
-    const data = await this.productService.countProduct();
-
-    if (data === 0) {
-      return {
-        statusCode: 404,
-        message: 'Data not found'
-      }
-    }
-
-    return {
-      statusCode: 200,
-      message: 'success',
-      data
-    }
+    return this.productService.countProduct();
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @get('/products', {
     summary: 'List of products API Endpoint',
     responses: {
@@ -98,21 +78,10 @@ export class ProductController {
     },
   })
   async find() {
-    const data = await this.productService.findAll();
-    if (!data || data.length === 0) {
-      throw {
-        statusCode: 404,
-        message: 'Data not found',
-      };
-    }
-    return {
-      statusCode: 200,
-      message: 'success',
-      data,
-    };
+    return this.productService.findAll();
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @get('/products/{id}', {
     summary: 'Get products by ID API Endpoint',
     responses: {
@@ -123,21 +92,10 @@ export class ProductController {
   async findById(
     @param.path.string('id') id: string,
   ) {
-    const data = await this.productService.findById(id);
-    if (!data) {
-      throw {
-        statusCode: 404,
-        message: 'Data not found',
-      };
-    }
-    return {
-      statusCode: 200,
-      message: 'success',
-      data,
-    };
+    return this.productService.findById(id);
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @patch('/products/{id}', {
     summary: 'Update products API Endpoint',
     responses: {
@@ -167,22 +125,13 @@ export class ProductController {
         },
       },
     })
-    payload: {
-      categoryId: 'string',
-      name: 'string',
-      description: 'string',
-    }) {
-    const result = await this.productService.updateById(id, payload);
-    if (result.statusCode === 404) {
-      throw {
-        statusCode: 404,
-        message: 'Data not found',
-      };
-    }
-    return result;
+    payload: {categoryId: string, name: string, description: string},
+    @inject(SecurityBindings.USER) user: UserProfile,
+  ) {
+    return this.productService.updateById(id, payload, user[securityId]);
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @del('/products/{id}', {
     summary: 'Delete products API Endpoint',
     responses: {
@@ -190,14 +139,9 @@ export class ProductController {
       '404': {description: 'Data not found or data already deleted'},
     },
   })
-  async deleteById(@param.path.string('id') id: string) {
-    const result = await this.productService.deleteProductById(id);
-    if (result.statusCode === 404) {
-      throw {
-        statusCode: 404,
-        message: 'Data not found or data already deleted',
-      };
-    }
-    return result;
+  async deleteById(@param.path.string('id') id: string,
+    @inject(SecurityBindings.USER) user: UserProfile,
+  ) {
+    return this.productService.deleteById(id, user[securityId]);
   }
 }

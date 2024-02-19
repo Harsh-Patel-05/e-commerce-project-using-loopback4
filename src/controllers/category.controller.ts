@@ -1,6 +1,5 @@
-import {
-  repository
-} from '@loopback/repository';
+import {authenticate} from '@loopback/authentication';
+import {inject, service} from '@loopback/core';
 import {
   del,
   get,
@@ -9,8 +8,8 @@ import {
   post,
   requestBody
 } from '@loopback/rest';
+import {SecurityBindings, UserProfile, securityId} from '@loopback/security';
 import {CategoryService} from '../services';
-import {service} from '@loopback/core';
 
 export class CategoryController {
   constructor(
@@ -18,14 +17,15 @@ export class CategoryController {
     public categoryService: CategoryService,
   ) { }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @post('/categories', {
     summary: 'Create categories API Endpoint',
     responses: {
       '200': {},
+      '404': {description: 'Data not found'},
     },
   })
-  async create(
+  async createCategory(
     @requestBody({
       description: 'Create categories API Endpoint',
       content: {
@@ -41,20 +41,13 @@ export class CategoryController {
         },
       },
     })
-    payload: {
-      name: 'string',
-    }) {
-    const data = await this.categoryService.createCategory(
-      payload.name,
-    );
-    return {
-      statusCode: 200,
-      message: 'created successfully',
-      data,
-    };
+    payload: {name: string},
+    @inject(SecurityBindings.USER) user: UserProfile,
+  ) {
+    return this.categoryService.createCategory(payload.name, user[securityId]);
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @get('/categories/count', {
     summary: 'Count categories API Endpoint',
     responses: {
@@ -63,21 +56,10 @@ export class CategoryController {
     },
   })
   async count() {
-    const data = await this.categoryService.countCategory();
-    if (data === 0) {
-      return {
-        statusCode: 404,
-        message: 'No address found'
-      }
-    }
-    return {
-      statusCode: 200,
-      message: 'success',
-      data
-    }
+    return this.categoryService.countCategory();
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @get('/categories', {
     summary: 'List of categories API Endpoint',
     responses: {
@@ -86,21 +68,10 @@ export class CategoryController {
     },
   })
   async find() {
-    const data = await this.categoryService.findCategory();
-    if (!data || data.length === 0) {
-      throw {
-        statusCode: 404,
-        message: 'No categories found',
-      };
-    }
-    return {
-      statusCode: 200,
-      message: 'success',
-      data,
-    };
+    return this.categoryService.findCategory();
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @get('/categories/{id}', {
     summary: 'Get categories by ID API Endpoint',
     responses: {
@@ -111,29 +82,18 @@ export class CategoryController {
   async findById(
     @param.path.string('id') id: string,
   ) {
-    const data = await this.categoryService.findCategoryById(id);
-    if (!data) {
-      throw {
-        statusCode: 404,
-        message: 'categories not found',
-      };
-    }
-    return {
-      statusCode: 200,
-      message: 'success',
-      data,
-    };
+    return this.categoryService.findCategoryById(id);
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @patch('/categories/{id}', {
-    summary: 'Update categories API Endpoint',
+    summary: 'Update categories by ID API Endpoint',
     responses: {
       '200': {},
       '404': {description: 'categories not found'},
     },
   })
-  async updateById(
+  async updateCategoryById(
     @param.path.string('id') id: string,
     @requestBody({
       description: 'Update categories API Endpoint',
@@ -149,35 +109,24 @@ export class CategoryController {
         },
       },
     })
-    payload: {
-      name: 'string',
-    }) {
-    const result = await this.categoryService.updateCategoryById(id, payload);
-    if (result.statusCode === 404) {
-      throw {
-        statusCode: 404,
-        message: 'categories not found',
-      };
-    }
-    return result;
+    payload: {name: string},
+    @inject(SecurityBindings.USER) user: UserProfile,
+  ) {
+    return this.categoryService.updateCategoryById(id, payload, user[securityId]);
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @del('/categories/{id}', {
-    summary: 'Delete categories API Endpoint',
+    summary: 'Delete categories by ID API Endpoint',
     responses: {
       '200': {},
-      '404': {description: 'categories not found or data already deleted'},
+      '404': {description: 'categories not found'},
     },
   })
-  async deleteById(@param.path.string('id') id: string) {
-    const result = await this.categoryService.deleteCategoryById(id);
-    if (result.statusCode === 404) {
-      throw {
-        statusCode: 404,
-        message: 'categories not found or data already deleted',
-      };
-    }
-    return result;
+  async deleteCategoryById(
+    @param.path.string('id') id: string,
+    @inject(SecurityBindings.USER) user: UserProfile,
+  ) {
+    return this.categoryService.deleteCategoryById(id, user[securityId]);
   }
 }
