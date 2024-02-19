@@ -104,7 +104,7 @@ export class ProductService {
   }
 
   //findById product repository
-  async findById(id: string) {
+  async findById(id: string) {  
     const chekProduct = await this.productRepository.findOne({
       where: {
         id,

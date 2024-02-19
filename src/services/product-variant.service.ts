@@ -1,7 +1,7 @@
 import {BindingScope, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {ProductVariant} from '../models';
-import {ProductRepository, ProductVariantRepository} from '../repositories';
+import {AdminRepository, ProductRepository, ProductVariantRepository} from '../repositories';
+import {ProductKeys} from '../shared/keys/products.keys';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class ProductVariantService {
@@ -9,68 +9,119 @@ export class ProductVariantService {
     @repository(ProductVariantRepository)
     public productVariantRepository: ProductVariantRepository,
     @repository(ProductRepository)
-    public productRepository: ProductRepository) { }
+    public productRepository: ProductRepository,
+    @repository(AdminRepository)
+    public adminRepository: AdminRepository) { }
 
   //create product-variant repository
   async create(
-    productId: string,
-    size: string,
-    color: string,
-    stock: number,
-    price: number
+    payload: {
+      productId: string,
+      size: string,
+      color: string,
+      stock: number,
+      price: number
+    },
+    adminId: string,
   ) {
-    const product = await this.productRepository.findOne({
+    const admin = await this.adminRepository.findOne({
       where: {
-        id: productId,
+        id: adminId,
         isDeleted: false,
       },
     });
-    if (product) {
-      const data = await this.productVariantRepository.create({
-        productId: productId,
-        size: size,
-        color: color,
-        stock: stock,
-        price: price
-      });
+
+    if (!admin) {
       return {
-        statusCode: 200,
-        message: 'created successfully',
-        data,
+        statusCode: 404,
+        message: ProductKeys.ONLY_ADMIN
       };
-    } else {
+    }
+    const product = await this.productRepository.findOne({
+      where: {
+        id: payload.productId,
+        isDeleted: false,
+      },
+    });
+    if (!product) {
       return {
-        statusCode: 400,
-        message: 'Cannot find product',
+        statusCode: 404,
+        message: ProductKeys.PRODUCT_NOT_FOUND
       };
+    }
+    const productVariant = await this.productVariantRepository.create({
+      productId: payload.productId,
+      size: payload.size,
+      color: payload.color,
+      stock: payload.stock,
+      price: payload.price
+    });
+    return {
+      statusCode: 200,
+      message: ProductKeys.PRODUCT_VARIANT_CREATED,
+      data: productVariant,
+    };
+  }
+
+
+  //count product-variant repository
+  async count() {
+    const chekProductVariant = await this.productVariantRepository.count({
+      isDeleted: false
+    });
+    if (!chekProductVariant) {
+      return {
+        statusCode: 404,
+        message: ProductKeys.PRODUCT_VARIANT_NOT_FOUND
+      };
+    }
+    const result = chekProductVariant.count ?? 0;
+    return {
+      statusCode: 200,
+      message: ProductKeys.PRODUCT_VARIANT_FETCHED_SUCCESSFULLY,
+      data: result,
     }
   }
 
-  //count product-variant repository
-  async count(): Promise<number> {
-    const result = await this.productVariantRepository.count({
-      isDeleted: false
-    });
-    return result.count ?? 0;
-  }
-
   //findAll product-variant repository
-  async findAll(): Promise<ProductVariant[]> {
-    return this.productVariantRepository.find({
+  async findAll() {
+    const chekProductVariant = await this.productVariantRepository.find({
       where: {
         isDeleted: false
       }
     });
+    if (!chekProductVariant || chekProductVariant.length === 0) {
+      return {
+        statusCode: 404,
+        message: ProductKeys.PRODUCT_VARIANT_NOT_FOUND
+      };
+    }
+    return {
+      statusCode: 200,
+      message: ProductKeys.PRODUCT_VARIANT_FETCHED_SUCCESSFULLY,
+      data: chekProductVariant,
+    }
   }
 
   //findById product-variant repository
-  async findById(id: string): Promise<ProductVariant | null> {
-    return this.productVariantRepository.findOne({
+  async findById(id: string) {
+    const chekProductVariant = await this.productVariantRepository.findOne({
       where: {
         id,
         isDeleted: false
       }
-    })
+    });
+    if (!chekProductVariant) {
+      return {
+        statusCode: 404,
+        message: ProductKeys.PRODUCT_VARIANT_NOT_FOUND
+      };
+    }
+    return {
+      statusCode: 200,
+      message: ProductKeys.PRODUCT_VARIANT_FETCHED_SUCCESSFULLY,
+      data: chekProductVariant,
+    }
   }
 
   //updateById product-variant repository
@@ -82,47 +133,71 @@ export class ProductVariantService {
       color: string,
       stock: number,
       price: number
-    }) {
-    const existingData = await this.productVariantRepository.findOne({
+    },
+    adminId: string) {
+    const admin = await this.adminRepository.findOne({
+      where: {
+        id: adminId,
+      },
+    });
+    if (!admin) {
+      return {
+        statusCode: 404,
+        message: ProductKeys.ONLY_ADMIN,
+      };
+    }
+    const chekProductVariant = await this.productVariantRepository.findOne({
       where: {
         id,
         isDeleted: false
       }
     });
-    if (!existingData) {
+    if (!chekProductVariant) {
       return {
         statusCode: 404,
-        message: 'Data not found'
+        message: ProductKeys.PRODUCT_VARIANT_NOT_FOUND,
       }
     }
     const result = await this.productVariantRepository.updateById(id, payload);
     return {
       statusCode: 200,
-      message: 'Data Updated successfully',
+      message: ProductKeys.PRODUCT_VARIANT_UPDATED,
       result,
     };
   }
 
   //delete product-variant repository
-  async deleteById(id: string) {
-    const existingData = await this.productVariantRepository.findOne({
+  async deleteById(id: string, adminId: string) {
+    const admin = await this.adminRepository.findOne({
+      where: {
+        id: adminId,
+        isDeleted: false,
+      },
+    });
+    if (!admin) {
+      return {
+        statusCode: 404,
+        message: ProductKeys.ONLY_ADMIN
+      };
+    }
+    const chekProductVariant = await this.productVariantRepository.findOne({
       where: {
         id,
         isDeleted: false
       }
     });
-    if (!existingData) {
+    if (!chekProductVariant) {
       return {
         statusCode: 404,
-        message: 'Product-Variant data already deleted'
+        message: ProductKeys.PRODUCT_VARIANT_NOT_FOUND
       }
     }
-    const result = await this.productVariantRepository.updateById(id, {
+    await this.productVariantRepository.updateById(id, {
       isDeleted: true
     });
     return {
       statusCode: 200,
-      message: "Delete successfully",
+      message: ProductKeys.PRODUCT_VARIANT_DELETED
     }
   }
 }
