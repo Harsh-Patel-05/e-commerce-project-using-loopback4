@@ -1,10 +1,9 @@
 import {Getter, inject} from '@loopback/core';
-import {BelongsToAccessor, DefaultCrudRepository, Filter, Options, repository} from '@loopback/repository';
+import {BelongsToAccessor, DefaultCrudRepository, repository} from '@loopback/repository';
+import {DateTime} from 'luxon';
 import {MongoDbDataSource} from '../datasources';
 import {Admin, AdminSession, AdminSessionRelations} from '../models';
 import {AdminRepository} from './admin.repository';
-import {HttpErrors} from '@loopback/rest';
-import {DateTime} from 'luxon';
 
 export class AdminSessionRepository extends DefaultCrudRepository<
   AdminSession,
@@ -24,15 +23,15 @@ export class AdminSessionRepository extends DefaultCrudRepository<
     this.registerInclusionResolver('admin', this.admin.inclusionResolver);
   }
 
-  async findOne(filter?: Filter<AdminSession>, options?: Options): Promise<AdminSession> {
-    const result = await super.findOne(filter, options);
+  // async findOne(filter?: Filter<AdminSession>, options?: Options): Promise<AdminSession> {
+  //   const result = await super.findOne(filter, options);
 
-    if (result) {
-      return result;
-    } else {
-      throw new HttpErrors.NotFound('Entity Not Found : Session');
-    }
-  }
+  //   if (result) {
+  //     return result;
+  //   } else {
+  //     throw new HttpErrors.NotFound('Entity Not Found : Session');
+  //   }
+  // }
 
   async findSessionByToken(token: string): Promise<AdminSession | boolean> {
     const session = await this.findOne({

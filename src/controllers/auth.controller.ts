@@ -388,7 +388,7 @@ export class AuthController {
       }
     });
     if (adminSession) {
-      const admin = await this.adminSessionRepository.updateById(adminSession.id, {
+      await this.adminSessionRepository.updateById(adminSession.id, {
         status: 'expired',
         expiredAt: DateTime.utc().toISO(),
       });
@@ -405,7 +405,7 @@ export class AuthController {
       }
     });
     if (customerSession) {
-      const customer = await this.customerSessionRepository.updateById(customerSession.id, {
+      await this.customerSessionRepository.updateById(customerSession.id, {
         status: 'expired',
         expiredAt: DateTime.utc().toISO(),
       });

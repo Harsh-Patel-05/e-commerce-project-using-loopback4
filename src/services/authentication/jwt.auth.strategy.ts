@@ -2,7 +2,7 @@ import {AuthenticationStrategy, TokenService} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {HttpErrors, Request, RestBindings} from '@loopback/rest';
-import {UserProfile, securityId} from '@loopback/security';
+import {UserProfile} from '@loopback/security';
 import {TokenServiceBindings} from '../../keys';
 import {Session} from '../../models/session.model';
 import {User} from '../../models/user.model';
@@ -80,21 +80,31 @@ export class JWTAuthenticationStrategy implements AuthenticationStrategy {
       if (checkAdmin) {
         session = await this.adminSessionRepository.findOne({
           where: {
-            id: userProfile[securityId],
-            expiredAt: {gt: new Date(Date.now())}
-          }
+            or: [
+              {
+                accessToken: token,
+                status: 'current',
+                expireAt: {gte: new Date(Date.now())},
+              },
+            ],
+          },
         });
         user = await this.adminRepository.findOne({
           where: {
-            id: session.adminId
+            id: session?.adminId
           }
         });
       } else {
         session = await this.customerSessionRepository.findOne({
           where: {
-            id: userProfile[securityId],
-            expiredAt: {gt: new Date(Date.now())}
-          }
+            or: [
+              {
+                accessToken: token,
+                status: 'current',
+                expireAt: {gte: new Date(Date.now())},
+              },
+            ],
+          },
         });
         user = await this.customerRepository.findOne({
           where: {
@@ -113,7 +123,7 @@ export class JWTAuthenticationStrategy implements AuthenticationStrategy {
         session,
       };
     } catch (err: any) {
-      throw new HttpErrors.Unauthorized();
+      throw new HttpErrors.Unauthorized('Token is expired');
     }
   }
 }
