@@ -1,7 +1,8 @@
 import {authenticate} from '@loopback/authentication';
 import {inject, service} from '@loopback/core';
 import {repository} from '@loopback/repository';
-import {HttpErrors, Request, RestBindings, post, requestBody} from '@loopback/rest';
+import {HttpErrors, Request, RestBindings, get, post, requestBody} from '@loopback/rest';
+import {SecurityBindings} from '@loopback/security';
 import {genSalt, hash} from 'bcryptjs';
 import {DateTime} from 'luxon';
 import {
@@ -17,6 +18,7 @@ import {
   UserRepository
 } from '../repositories';
 import {UserService} from '../services';
+import {AuthCredentials} from '../services/authentication/jwt.auth.strategy';
 import {AuthKeys} from '../shared/keys/auth.keys';
 import {UserKeys} from '../shared/keys/user.keys';
 
@@ -386,13 +388,13 @@ export class AuthController {
       }
     });
     if (adminSession) {
-      const admin = await this.sessionRepository.updateById(adminSession.id, {
+      const admin = await this.adminSessionRepository.updateById(adminSession.id, {
         status: 'expired',
         expiredAt: DateTime.utc().toISO(),
       });
       return {
         statusCode: 200,
-        message: AuthKeys.LOGIN_SUCCESS,
+        message: AuthKeys.LOGOUT_SUCCESS,
       };
     }
 
@@ -409,12 +411,27 @@ export class AuthController {
       });
       return {
         statusCode: 200,
-        message: AuthKeys.LOGIN_SUCCESS,
+        message: AuthKeys.LOGOUT_SUCCESS,
       };
     }
     return {
       statusCode: 404,
-      message: AuthKeys.NOT_LOGGED_IN
+      message: AuthKeys.NOT_LOGGED_OUT
     };
+  }
+
+  @authenticate('jwt')
+  @get('auth/who-am-i', {
+    summary: 'Returns the logged in user info',
+    responses: {
+      '200': {
+      },
+    },
+  })
+  async whoAmI(
+    @inject(SecurityBindings.USER)
+    authCredentials: AuthCredentials,
+  ): Promise<object> {
+    return authCredentials;
   }
 }
