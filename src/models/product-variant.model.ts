@@ -1,6 +1,7 @@
 import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
 import {Product} from './product.model';
 import {DateTime} from 'luxon';
+import {Cart} from './cart.model';
 
 @model({
   settings: {
@@ -73,8 +74,8 @@ export class ProductVariant extends Entity {
   })
   updatedAt?: DateTime;
 
-  // @hasOne(() => Cart)
-  // cart: Cart;
+  @hasOne(() => Cart)
+  cart: Cart;
 
   // @hasOne(() => CustomerReviews)
   // customerReviews: CustomerReviews;

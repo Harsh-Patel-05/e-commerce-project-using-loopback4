@@ -1,6 +1,7 @@
 import {Entity, hasOne, model, property} from '@loopback/repository';
 import {DateTime} from 'luxon';
 import {CustomerCredentials} from './customer-credentials.model';
+import {Cart} from './cart.model';
 
 @model({
   settings: {
@@ -73,6 +74,9 @@ export class Customer extends Entity {
 
   @hasOne(() => CustomerCredentials)
   customerCredentials: CustomerCredentials;
+
+  @hasOne(() => Cart)
+  cart: Cart;
 
   constructor(data?: Partial<Customer>) {
     super(data);

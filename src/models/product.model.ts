@@ -2,6 +2,7 @@ import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
 import {DateTime} from 'luxon';
 import {Category} from './category.model';
 import {ProductVariant} from './product-variant.model';
+import {Cart} from './cart.model';
 
 @model({
   settings: {
@@ -65,8 +66,8 @@ export class Product extends Entity {
   @hasOne(() => ProductVariant)
   productVariant: ProductVariant;
 
-  // @hasOne(() => Cart)
-  // cart: Cart;
+  @hasOne(() => Cart)
+  cart: Cart;
 
   constructor(data?: Partial<Product>) {
     super(data);

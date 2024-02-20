@@ -1,150 +1,117 @@
+import {authenticate} from '@loopback/authentication';
+import {inject, service} from '@loopback/core';
 import {
-  Count,
-  CountSchema,
-  Filter,
-  FilterExcludingWhere,
-  repository,
-  Where,
-} from '@loopback/repository';
-import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
+  Request,
+  RestBindings,
   del,
+  get,
+  param,
+  patch,
+  post,
   requestBody,
-  response,
+  response
 } from '@loopback/rest';
-import {Cart} from '../models';
-import {CartRepository} from '../repositories';
+import {CartService} from '../services';
 
 export class CartController {
   constructor(
-    @repository(CartRepository)
-    public cartRepository : CartRepository,
-  ) {}
+    @service(CartService)
+    public cartService: CartService,
+  ) { }
 
-  @post('/carts')
-  @response(200, {
-    description: 'Cart model instance',
-    content: {'application/json': {schema: getModelSchemaRef(Cart)}},
+  @authenticate('jwt')
+  @post('/carts', {
+    summary: 'Create carts API Endpoint',
+    responses: {
+      '200': {},
+      '400': {description: 'Cannot find carts'},
+    },
   })
   async create(
     @requestBody({
+      description: 'Payload for adding a product to the cart',
+      required: true,
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Cart, {
-            title: 'NewCart',
-            exclude: ['id'],
-          }),
+          schema: {
+            type: 'object',
+            required: ['productVariantId', 'quantity'],
+            properties: {
+              productVariantId: {type: 'string'},
+              quantity: {type: 'number'},
+            },
+          },
         },
       },
     })
-    cart: Omit<Cart, 'id'>,
-  ): Promise<Cart> {
-    return this.cartRepository.create(cart);
+    payload: {productVariantId: string; quantity: number},
+    @inject(RestBindings.Http.REQUEST) req: Request,
+  ) {
+    return this.cartService.create(payload, req);
   }
 
-  @get('/carts/count')
-  @response(200, {
-    description: 'Cart model count',
-    content: {'application/json': {schema: CountSchema}},
-  })
-  async count(
-    @param.where(Cart) where?: Where<Cart>,
-  ): Promise<Count> {
-    return this.cartRepository.count(where);
-  }
-
-  @get('/carts')
-  @response(200, {
-    description: 'Array of Cart model instances',
-    content: {
-      'application/json': {
-        schema: {
-          type: 'array',
-          items: getModelSchemaRef(Cart, {includeRelations: true}),
-        },
-      },
+  @authenticate('jwt')
+  @get('/carts/count', {
+    summary: 'Count carts API Endpoint',
+    responses: {
+      '200': {},
+      '404': {description: 'Data not found'},
     },
   })
-  async find(
-    @param.filter(Cart) filter?: Filter<Cart>,
-  ): Promise<Cart[]> {
-    return this.cartRepository.find(filter);
+  async count() {
+    return this.cartService.countCart();
   }
 
-  @patch('/carts')
-  @response(200, {
-    description: 'Cart PATCH success count',
-    content: {'application/json': {schema: CountSchema}},
-  })
-  async updateAll(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(Cart, {partial: true}),
-        },
-      },
-    })
-    cart: Cart,
-    @param.where(Cart) where?: Where<Cart>,
-  ): Promise<Count> {
-    return this.cartRepository.updateAll(cart, where);
-  }
-
-  @get('/carts/{id}')
-  @response(200, {
-    description: 'Cart model instance',
-    content: {
-      'application/json': {
-        schema: getModelSchemaRef(Cart, {includeRelations: true}),
-      },
+  @authenticate('jwt')
+  @get('/carts', {
+    summary: 'List of carts API Endpoint',
+    responses: {
+      '200': {},
+      '404': {description: 'Data not found'},
     },
   })
-  async findById(
-    @param.path.string('id') id: string,
-    @param.filter(Cart, {exclude: 'where'}) filter?: FilterExcludingWhere<Cart>
-  ): Promise<Cart> {
-    return this.cartRepository.findById(id, filter);
+  async find(@inject(RestBindings.Http.REQUEST) req: Request) {
+    return this.cartService.findAll(req);
   }
 
-  @patch('/carts/{id}')
-  @response(204, {
-    description: 'Cart PATCH success',
+  @authenticate('jwt')
+  @patch('/carts/{id}', {
+    summary: 'Update carts API Endpoint',
+    responses: {
+      '200': {},
+      '404': {description: 'Data not found'},
+    },
   })
   async updateById(
-    @param.path.string('id') id: string,
     @requestBody({
+      description: 'Payload for updating the cart',
+      required: true,
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Cart, {partial: true}),
+          schema: {
+            type: 'object',
+            properties: {
+              productVariantId: {type: 'string'},
+              quantity: {type: 'number'},
+            },
+          },
         },
       },
     })
-    cart: Cart,
-  ): Promise<void> {
-    await this.cartRepository.updateById(id, cart);
-  }
-
-  @put('/carts/{id}')
-  @response(204, {
-    description: 'Cart PUT success',
-  })
-  async replaceById(
+    payload: {productVariantId: string; quantity: number},
     @param.path.string('id') id: string,
-    @requestBody() cart: Cart,
-  ): Promise<void> {
-    await this.cartRepository.replaceById(id, cart);
+    @inject(RestBindings.Http.REQUEST) req: Request,
+  ) {
+    await this.cartService.update(id, payload, req);
   }
 
   @del('/carts/{id}')
   @response(204, {
     description: 'Cart DELETE success',
   })
-  async deleteById(@param.path.string('id') id: string): Promise<void> {
-    await this.cartRepository.deleteById(id);
+  async deleteById(
+    @param.path.string('id') id: string,
+    @inject(RestBindings.Http.REQUEST) req: Request,) {
+    await this.cartService.delete(id, req);
   }
 }
