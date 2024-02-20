@@ -1,4 +1,4 @@
-import {service} from '@loopback/core';
+import {inject, service} from '@loopback/core';
 import {
   del,
   get,
@@ -7,7 +7,9 @@ import {
   post,
   requestBody
 } from '@loopback/rest';
+import {SecurityBindings, UserProfile, securityId} from '@loopback/security';
 import {ProductVariantService} from '../services';
+
 
 export class ProductVariantController {
   constructor(
@@ -57,21 +59,9 @@ export class ProductVariantController {
       color: 'string',
       stock: number,
       price: number,
-    }) {
-    const result = await this.productVariantService.create(
-      payload.productId,
-      payload.size,
-      payload.color,
-      payload.stock,
-      payload.price
-    );
-    if (result.statusCode === 400) {
-      throw {
-        statusCode: 400,
-        message: 'Cannot find product ',
-      };
-    }
-    return result;
+    },
+    @inject(SecurityBindings.USER) user: UserProfile,) {
+    return this.productVariantService.create(payload, user[securityId])
   }
 
   // @authenticate('jwt')
@@ -83,18 +73,7 @@ export class ProductVariantController {
     },
   })
   async count() {
-    const data = await this.productVariantService.count();
-    if (data === 0) {
-      return {
-        statusCode: 404,
-        message: 'Data not found'
-      }
-    }
-    return {
-      statusCode: 200,
-      message: 'success',
-      data
-    }
+    return this.productVariantService.count();
   }
 
   // @authenticate('jwt')
@@ -106,18 +85,7 @@ export class ProductVariantController {
     },
   })
   async find() {
-    const data = await this.productVariantService.findAll();
-    if (!data || data.length === 0) {
-      throw {
-        statusCode: 404,
-        message: 'Data not found',
-      };
-    }
-    return {
-      statusCode: 200,
-      message: 'success',
-      data,
-    };
+    return this.productVariantService.findAll();
   }
 
   // @authenticate('jwt')
@@ -131,18 +99,7 @@ export class ProductVariantController {
   async findById(
     @param.path.string('id') id: string,
   ) {
-    const data = await this.productVariantService.findById(id);
-    if (!data) {
-      throw {
-        statusCode: 404,
-        message: 'Data not found',
-      };
-    }
-    return {
-      statusCode: 200,
-      message: 'success',
-      data,
-    };
+    return this.productVariantService.findById(id);
   }
 
   // @authenticate('jwt')
@@ -187,15 +144,10 @@ export class ProductVariantController {
       color: 'string',
       stock: number,
       price: number,
-    }) {
-    const result = await this.productVariantService.updateById(id, payload);
-    if (result.statusCode === 404) {
-      throw {
-        statusCode: 404,
-        message: 'Data not found',
-      };
-    }
-    return result;
+    },
+    @inject(SecurityBindings.USER) user: UserProfile,
+  ) {
+    return this.productVariantService.updateById(id, payload, user[securityId]);
   }
 
   // @authenticate('jwt')
@@ -206,14 +158,7 @@ export class ProductVariantController {
       '404': {description: 'Data not found or data already deleted'},
     },
   })
-  async deleteById(@param.path.string('id') id: string) {
-    const result = await this.productVariantService.deleteById(id);
-    if (result.statusCode === 404) {
-      throw {
-        statusCode: 404,
-        message: 'Data not found or data already deleted',
-      };
-    }
-    return result;
+  async deleteById(@param.path.string('id') id: string, @inject(SecurityBindings.USER) user: UserProfile,) {
+    return this.productVariantService.deleteById(id, user[securityId]);
   }
 }

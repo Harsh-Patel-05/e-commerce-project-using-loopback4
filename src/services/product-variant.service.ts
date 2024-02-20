@@ -87,7 +87,10 @@ export class ProductVariantService {
   async findAll() {
     const chekProductVariant = await this.productVariantRepository.find({
       where: {
-        isDeleted: false
+        isDeleted: false,
+        stock: {
+          gt: 0,
+        },
       }
     });
     if (!chekProductVariant || chekProductVariant.length === 0) {
@@ -108,7 +111,10 @@ export class ProductVariantService {
     const chekProductVariant = await this.productVariantRepository.findOne({
       where: {
         id,
-        isDeleted: false
+        isDeleted: false,
+        stock: {
+          gt: 0,
+        },
       }
     });
     if (!chekProductVariant) {
