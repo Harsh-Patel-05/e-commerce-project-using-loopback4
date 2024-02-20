@@ -241,10 +241,6 @@ export class CartService {
       };
     }
 
-
-
-    
-
     let Products = [];
     let ProductIds = [];
     ProductIds = cart.productIds;
