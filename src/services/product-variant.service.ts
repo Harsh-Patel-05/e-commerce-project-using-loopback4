@@ -63,7 +63,6 @@ export class ProductVariantService {
     };
   }
 
-
   //count product-variant repository
   async count() {
     const chekProductVariant = await this.productVariantRepository.count({
@@ -113,7 +112,7 @@ export class ProductVariantService {
         id,
         isDeleted: false,
         stock: {
-          gt: 0,
+          gte: 0,
         },
       }
     });

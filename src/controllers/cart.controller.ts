@@ -1,17 +1,16 @@
-import {authenticate} from '@loopback/authentication';
+import {AuthenticationBindings, authenticate} from '@loopback/authentication';
 import {inject, service} from '@loopback/core';
 import {
-  Request,
-  RestBindings,
   del,
   get,
   param,
   patch,
   post,
-  requestBody,
-  response
+  requestBody
 } from '@loopback/rest';
+import {UserProfile} from '@loopback/security';
 import {CartService} from '../services';
+
 
 export class CartController {
   constructor(
@@ -35,7 +34,6 @@ export class CartController {
         'application/json': {
           schema: {
             type: 'object',
-            required: ['productVariantId', 'quantity'],
             properties: {
               productVariantId: {type: 'string'},
               quantity: {type: 'number'},
@@ -45,9 +43,9 @@ export class CartController {
       },
     })
     payload: {productVariantId: string; quantity: number},
-    @inject(RestBindings.Http.REQUEST) req: Request,
+    @inject(AuthenticationBindings.CURRENT_USER) user: UserProfile,
   ) {
-    return this.cartService.create(payload, req);
+    return this.cartService.create(payload, user);
   }
 
   @authenticate('jwt')
@@ -70,8 +68,8 @@ export class CartController {
       '404': {description: 'Data not found'},
     },
   })
-  async find(@inject(RestBindings.Http.REQUEST) req: Request) {
-    return this.cartService.findAll(req);
+  async find(@inject(AuthenticationBindings.CURRENT_USER) user: UserProfile,) {
+    return this.cartService.findAll(user);
   }
 
   @authenticate('jwt')
@@ -100,18 +98,22 @@ export class CartController {
     })
     payload: {productVariantId: string; quantity: number},
     @param.path.string('id') id: string,
-    @inject(RestBindings.Http.REQUEST) req: Request,
+    @inject(AuthenticationBindings.CURRENT_USER) user: UserProfile
   ) {
-    await this.cartService.update(id, payload, req);
+    return this.cartService.update(id, payload, user);
   }
 
-  @del('/carts/{id}')
-  @response(204, {
-    description: 'Cart DELETE success',
+  @authenticate('jwt')
+  @del('/carts/{id}', {
+    summary: 'Delate carts API Endpoint',
+    responses: {
+      '200': {},
+      '404': {description: 'Data not found'},
+    },
   })
   async deleteById(
     @param.path.string('id') id: string,
-    @inject(RestBindings.Http.REQUEST) req: Request,) {
-    await this.cartService.delete(id, req);
+    @inject(AuthenticationBindings.CURRENT_USER) user: UserProfile) {
+    return this.cartService.delete(id, user);
   }
 }

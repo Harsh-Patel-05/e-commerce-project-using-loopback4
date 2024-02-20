@@ -20,24 +20,24 @@ export class Cart extends Entity {
 
   @belongsTo(() => Customer, {name: 'customer'}, {
     type: 'string',
-    required: true,
+    required: false,
     mongodb: {dataType: 'ObjectId'},
   })
-  customerId: string;
+  customerId?: string;
 
   @belongsTo(() => Product, {name: 'product'}, {
     type: 'string',
-    required: true,
+    required: false,
     mongodb: {dataType: 'ObjectId'},
   })
-  productId: string;
+  productId?: string;
 
   @belongsTo(() => ProductVariant, {name: 'productVariant'}, {
     type: 'string',
-    required: true,
+    required: false,
     mongodb: {dataType: 'ObjectId'},
   })
-  productVariantId: string;
+  productVariantId?: string;
 
   @property({
     type: 'json',

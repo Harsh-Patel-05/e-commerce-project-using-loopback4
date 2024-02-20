@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {inject, service} from '@loopback/core';
 import {
   del,
@@ -17,7 +18,7 @@ export class ProductVariantController {
     public productVariantService: ProductVariantService,
   ) { }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @post('/product-variants', {
     summary: 'Create product-variants API Endpoint',
     responses: {
@@ -64,7 +65,7 @@ export class ProductVariantController {
     return this.productVariantService.create(payload, user[securityId])
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @get('/product-variants/count', {
     summary: 'Count product-variants API Endpoint',
     responses: {
@@ -76,7 +77,7 @@ export class ProductVariantController {
     return this.productVariantService.count();
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @get('/product-variants', {
     summary: 'List of product-variants API Endpoint',
     responses: {
@@ -88,7 +89,7 @@ export class ProductVariantController {
     return this.productVariantService.findAll();
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @get('/product-variants/{id}', {
     summary: 'Get product-variants by ID API Endpoint',
     responses: {
@@ -102,7 +103,7 @@ export class ProductVariantController {
     return this.productVariantService.findById(id);
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @patch('/product-variants/{id}', {
     summary: 'Update product-variants API Endpoint',
     responses: {
@@ -150,7 +151,7 @@ export class ProductVariantController {
     return this.productVariantService.updateById(id, payload, user[securityId]);
   }
 
-  // @authenticate('jwt')
+  @authenticate('jwt')
   @del('/product-variants/{id}', {
     summary: 'Delete product-variants API Endpoint',
     responses: {
@@ -158,7 +159,9 @@ export class ProductVariantController {
       '404': {description: 'Data not found or data already deleted'},
     },
   })
-  async deleteById(@param.path.string('id') id: string, @inject(SecurityBindings.USER) user: UserProfile,) {
+  async deleteById(
+    @param.path.string('id') id: string,
+    @inject(SecurityBindings.USER) user: UserProfile) {
     return this.productVariantService.deleteById(id, user[securityId]);
   }
 }

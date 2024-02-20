@@ -1,5 +1,6 @@
 import { /* inject, */ BindingScope, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
+import {UserProfile} from '@loopback/security';
 import {AdminRepository, CartRepository, ProductVariantRepository} from '../repositories';
 import {CartKeys} from '../shared/keys/cart.keys';
 
@@ -19,9 +20,8 @@ export class CartService {
       productVariantId: string,
       quantity: number;
     },
-    req: any
+    user: UserProfile,
   ) {
-    const {user} = req;
     const admin = await this.adminRepository.findOne({
       where: {
         id: user.id,
@@ -49,7 +49,10 @@ export class CartService {
     }
 
     if (product.stock < payload.quantity) {
-      throw new Error(CartKeys.OUT_OF_STOCK);
+      return {
+        statusCode: 404,
+        message: CartKeys.OUT_OF_STOCK
+      };
     }
 
     let stock = product.stock;
@@ -130,9 +133,7 @@ export class CartService {
     }
   }
 
-  async findAll(req: any) {
-    const {user} = req;
-
+  async findAll(user: UserProfile) {
     const chekCart = await this.cartRepository.find({
       where: {
         customerId: user.id,
@@ -152,58 +153,68 @@ export class CartService {
     }
   }
 
-  async update(id: string, payload: {productVariantId: string, quantity: number}, req: any) {
-    const {user} = req;
-
+  async update(
+    id: string,
+    payload: {productVariantId: string; quantity: number},
+    user: UserProfile,
+  ) {
     const cart = await this.cartRepository.findOne({
       where: {
+        id: id,
         customerId: user.id,
         isDeleted: false,
       },
     });
+
     if (!cart) {
       return {
         statusCode: 404,
-        message: CartKeys.CART_NOT_FOUND
+        message: CartKeys.CART_NOT_FOUND,
       };
     }
+
     const product = await this.productVariantRepository.findOne({
       where: {
         id: payload.productVariantId,
         isDeleted: false,
       },
     });
+
     if (!product) {
       return {
         statusCode: 404,
-        message: CartKeys.PRODUCT_NOT_FOUND
+        message: CartKeys.PRODUCT_NOT_FOUND,
       };
     }
-    let Products = [];
-    let ProductIds = [];
-    ProductIds = cart.productIds;
-    Products.push(cart.products);
-    let total_price = cart.totalPrice;
+
+    let Products = cart.products || [];
+    let ProductIds = cart.productIds || [];
+
     Products.push(product);
     ProductIds.push(product.id);
-    total_price = total_price + product.price * payload.quantity;
-    let totalItems = Products.length;
 
-    const newProduct = await this.productVariantRepository.updateById(product.id, {
-      stock: payload.quantity,
+    const total_price = cart.totalPrice + product.price * payload.quantity;
+    const totalItems = Products.length;
+
+    await this.productVariantRepository.updateById(product.id, {
+      stock: product.stock - payload.quantity,
     });
 
-    return this.cartRepository.updateById(cart.id, {
-      customerId: user.id,
+    await this.cartRepository.updateById(cart.id, {
       productIds: ProductIds,
       products: Products,
       totalItems: totalItems,
       totalPrice: total_price,
     });
+
+    return {
+      statusCode: 200,
+      message: CartKeys.PRODUCT_UPDATED,
+      Products,
+    };
   }
 
-  async delete(id: string, req: any) {
-    const {user} = req;
+  async delete(id: string, user: UserProfile) {
     const cart = await this.cartRepository.findOne({
       where: {
         customerId: user.id,
@@ -259,7 +270,6 @@ export class CartService {
     return {
       statusCode: 200,
       message: CartKeys.PRODUCT_REMOVED,
-      Products,
     };
   }
 }
