@@ -13,3 +13,5 @@ export * from './category.repository';
 export * from './product-variant.repository';
 export * from './temp-reset-token.repository';
 export * from './cart.repository';
+export * from './order.repository';
+export * from './payment.repository';
