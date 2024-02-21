@@ -65,6 +65,7 @@
     "loopback-connector-mongodb": "^5.6.0",
     "luxon": "^3.4.4",
     "otp-generator": "^4.0.1",
+    "razorpay": "^0.0.0",
     "tslib": "^2.0.0"
   },
   "devDependencies": {
