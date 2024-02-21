@@ -1,4 +1,4 @@
-import {AuthenticationBindings} from '@loopback/authentication';
+import {AuthenticationBindings, authenticate} from '@loopback/authentication';
 import {inject, service} from '@loopback/core';
 import {
   post,
@@ -13,6 +13,7 @@ export class PaymentController {
     public paymentsService: PaymentService
   ) { }
 
+  @authenticate('jwt')
   @post('/payments', {
     summary: 'Create payments API Endpoint',
     responses: {
@@ -45,6 +46,7 @@ export class PaymentController {
     return this.paymentsService.create(payload, user);
   }
 
+  @authenticate('jwt')
   @post('/buy-now', {
     summary: 'buy-now API Endpoint',
     responses: {

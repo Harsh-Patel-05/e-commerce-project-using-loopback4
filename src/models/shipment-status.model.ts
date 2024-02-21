@@ -1,7 +1,7 @@
 import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {DateTime} from 'luxon';
 import {Address} from './address.model';
 import {Order} from './order.model';
-import {DateTime} from 'luxon';
 
 @model({
   settings: {

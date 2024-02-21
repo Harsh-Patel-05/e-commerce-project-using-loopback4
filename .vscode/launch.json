@@ -1,38 +1,50 @@
 {
+  "version": "0.2.0",
   "configurations": [
     {
+      "name": "Debug SST",
       "type": "node",
       "request": "launch",
-      "name": "Launch Program",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "program": "${workspaceFolder}/dist/index.js",
+      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/sst",
+      "runtimeArgs": ["dev", "--increase-timeout"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      // sourceMapRenames helps with the loading spinner when debugging and viewing local variables
+      "sourceMapRenames": false,
+      "env": {
+        "AWS_PROFILE": "flo-ct-flo360"
+      }
     },
     {
+      "name": "Debug Tests - Unit",
       "type": "node",
       "request": "launch",
-      "name": "Run Mocha tests",
-      "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
-      "runtimeArgs": [
-        "-r",
-        "${workspaceRoot}/node_modules/source-map-support/register"
-      ],
-      "cwd": "${workspaceRoot}",
-      "autoAttachChildProcesses": true,
-      "args": [
-        "--config",
-        "${workspaceRoot}/.mocharc.json",
-        "${workspaceRoot}/dist/__tests__/**/*.js",
-        "-t",
-        "0"
-      ]
+      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/sst",
+      "runtimeArgs": ["bind", "yarn", "\"jest\"", "\"--watch\"", "\"--config\"", "\"./jest.unit.config.cjs\"", "\"${input:scopeTestsFileName}\""],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "env": {
+        "AWS_PROFILE": "flo-ct-flo360"
+      },
     },
     {
+      "name": "Debug Tests - E2E",
       "type": "node",
-      "request": "attach",
-      "name": "Attach to Process",
-      "port": 5858
+      "request": "launch",
+      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/sst",
+      "runtimeArgs": ["bind", "yarn", "\"vitest\"", "\"--config\"", "\"./vitest.e2e.config.ts\"", "\"${input:scopeTestsFileName}\""],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "env": {
+        "AWS_PROFILE": "flo-ct-flo360"
+      },
+    },
+  ],
+  "inputs": [
+    {
+      "id": "scopeTestsFileName",
+      "type": "promptString",
+      "description": "Partial file name to scope test debugging to. ex. arena. Leave blank to run all tests.",
     }
   ]
 }

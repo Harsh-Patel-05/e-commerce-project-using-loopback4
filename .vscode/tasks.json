@@ -1,29 +1,36 @@
 {
-  // See https://go.microsoft.com/fwlink/?LinkId=733558
-  // for the documentation about the tasks.json format
   "version": "2.0.0",
+  "options": {
+    "cwd": "${workspaceFolder}"
+  },
   "tasks": [
     {
-      "label": "Watch and Compile Project",
-      "type": "shell",
-      "command": "npm",
-      "args": ["--silent", "run", "build:watch"],
-      "group": {
-        "kind": "build",
-        "isDefault": true
+      "label": "folder-open",
+      "dependsOn": ["eslint-check"],
+      "runOptions": {
+        "runOn": "folderOpen"
       },
-      "problemMatcher": "$tsc-watch"
+      "hide": true,
+      "problemMatcher": []
     },
     {
-      "label": "Build, Test and Lint",
-      "type": "shell",
-      "command": "npm",
-      "args": ["--silent", "run", "test:dev"],
-      "group": {
-        "kind": "test",
-        "isDefault": true
+      "label": "eslint-check",
+      "type": "process",
+      "command": "sh",
+      "args": [".vscode/eslint-check.sh"],
+      "windows": {
+        "command": "cmd.exe",
+        "args": ["/d", "/c", ".vscode\\eslint-check.cmd"]
       },
-      "problemMatcher": ["$tsc", "$eslint-compact", "$eslint-stylish"]
+      "isBackground": true,
+      "hide": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "never",
+        "panel": "dedicated",
+        "echo": false,
+        "close": true
+      }
     }
   ]
 }

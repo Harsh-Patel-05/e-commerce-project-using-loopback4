@@ -6,3 +6,4 @@ export * from './product-variant.service';
 export * from './product.service';
 export * from './user.service';
 
+export * from './shipment-status.service';
