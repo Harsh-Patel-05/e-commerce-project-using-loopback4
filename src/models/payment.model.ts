@@ -57,7 +57,6 @@ export class Payment extends Entity {
   @hasOne(() => Order)
   order: Order;
 
-
   constructor(data?: Partial<Payment>) {
     super(data);
   }

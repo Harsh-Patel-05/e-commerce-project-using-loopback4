@@ -53,7 +53,9 @@
     "@loopback/authentication": "^10.1.5",
     "@loopback/boot": "^6.1.5",
     "@loopback/core": "^5.1.5",
+    "@loopback/openapi-v3": "^9.1.5",
     "@loopback/repository": "^6.1.5",
+    "@loopback/repository-json-schema": "^7.2.1",
     "@loopback/rest": "^13.1.5",
     "@loopback/rest-explorer": "^6.1.5",
     "@loopback/service-proxy": "^6.1.5",
@@ -65,6 +67,7 @@
     "loopback-connector-mongodb": "^5.6.0",
     "luxon": "^3.4.4",
     "otp-generator": "^4.0.1",
+    "razorpay": "^2.9.2",
     "tslib": "^2.0.0"
   },
   "devDependencies": {
@@ -79,6 +82,6 @@
     "eslint": "^8.51.0",
     "nodemon": "^3.0.3",
     "source-map-support": "^0.5.21",
-    "typescript": "~5.2.2"
+    "typescript": "^5.3.3"
   }
 }

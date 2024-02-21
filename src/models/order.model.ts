@@ -18,7 +18,7 @@ export class Order extends Entity {
   id: string;
 
   @property({
-    type: 'json',
+    type: 'object',
     required: true,
   })
   productIds: any[];

@@ -40,7 +40,7 @@ export class Cart extends Entity {
   productVariantId?: string;
 
   @property({
-    type: 'json',
+    type: 'object',
     required: true,
   })
   productIds: any[];
