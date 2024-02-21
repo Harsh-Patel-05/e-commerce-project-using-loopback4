@@ -1,6 +1,7 @@
-import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
 import {Customer} from './customer.model';
 import {DateTime} from 'luxon';
+import {ShipmentStatus} from './shipment-status.model';
 
 @model({
   settings: {
@@ -78,6 +79,9 @@ export class Address extends Entity {
     default: () => DateTime.utc().toJSDate(),
   })
   updatedAt?: DateTime;
+
+  @hasOne(() => ShipmentStatus)
+  shipmentStatus: ShipmentStatus;
 
   constructor(data?: Partial<Address>) {
     super(data);

@@ -13,3 +13,4 @@ export * from './product-variant.model';
 export * from './product.model';
 export * from './temp-reset-token.model';
 
+export * from './shipment-status.model';

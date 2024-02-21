@@ -1,7 +1,8 @@
-import {Entity, belongsTo, model, property} from '@loopback/repository';
+import {Entity, belongsTo, hasOne, model, property} from '@loopback/repository';
 import {DateTime} from 'luxon';
 import {Customer} from './customer.model';
 import {Payment} from './payment.model';
+import {ShipmentStatus} from './shipment-status.model';
 
 @model({
   settings: {
@@ -92,8 +93,8 @@ export class Order extends Entity {
   })
   updatedAt?: DateTime;
 
-  // @hasOne(() => ShipmentStatus)
-  // shipmentStatus: ShipmentStatus;
+  @hasOne(() => ShipmentStatus)
+  shipmentStatus: ShipmentStatus;
 
   // @hasOne(() => OrderHistory)
   // orderHistory: OrderHistory;

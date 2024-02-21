@@ -16,3 +16,4 @@ export * from './temp-reset-token.repository';
 export * from './user-credentials.repository';
 export * from './user.repository';
 
+export * from './shipment-status.repository';
