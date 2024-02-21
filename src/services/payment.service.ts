@@ -445,7 +445,7 @@ export class PaymentService {
       });
 
       // Customize your PDF document
-      flx.order.products.forEach((product:any) => {
+      flx.order.products.forEach((product: any) => {
         doc.text('Product name : -' + product.name, 100, 100);
         doc.text('Product price : -' + product.price.toString(), 100, 150);
         doc.text('Product color : -' + product.color, 100, 200);

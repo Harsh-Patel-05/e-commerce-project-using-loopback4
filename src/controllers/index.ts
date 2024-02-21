@@ -6,3 +6,4 @@ export * from './payment.controller';
 export * from './product-variant.controller';
 export * from './product.controller';
 
+export * from './shipment-status.controller';
